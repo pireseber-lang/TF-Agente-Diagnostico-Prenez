@@ -300,6 +300,51 @@ Además, antes de la primera jornada en un dispositivo se realizará una prueba 
 
 Ninguno de estos puntos se presenta todavía como probado.
 
+## DEC-014 — Primer incremento funcional persistente
+
+- **Fecha:** 2026-09-07
+- **Estado:** Implementado y validado manualmente
+
+### Objetivo del incremento
+
+Implementar el recorrido mínimo **crear jornada → cargar una vaca → guardar localmente → listar → recargar → recuperar**, sin avanzar sobre cierre, historial completo, exportación ni componente agéntico.
+
+### Decisiones técnicas aplicadas
+
+- Se inicializó React con Vite y TypeScript estricto sin usar un scaffold que agregara dependencias extra.
+- Se incorporaron como dependencias de ejecución únicamente `react`, `react-dom` e `idb`.
+- Se incorporaron como dependencias de desarrollo TypeScript, Vite, el plugin oficial de React, `vite-plugin-pwa`, tipos necesarios y Vitest.
+- IndexedDB contiene stores separados para jornadas y animales, con índices por estado, fecha de creación, jornada y correlativo.
+- La lógica determinística se mantuvo fuera de React y de los repositorios.
+- IndexedDB es la fuente persistente; React conserva la proyección de la jornada visible.
+- El service worker se genera con `generateSW` y actualización tipo `prompt`.
+- Se usó un ícono SVG temporal para completar la base PWA. La instalación real en Android continúa pendiente de validación.
+
+### Alcance deliberadamente postergado
+
+No se implementó todavía la detección de duplicados. Aunque comparar valores exactos sería sencillo, conservar un duplicado requiere el flujo de revisión humana y la evidencia aprobada en DEC-004; implementar solo el bloqueo dejaría incompleto ese comportamiento.
+
+Tampoco se instalaron SheetJS ni Playwright, porque no son utilizados por este incremento. La exportación, el respaldo, el chequeo offline real, las actualizaciones visibles, búsqueda, edición, eliminación, cierre, estadísticas y el agente quedan para iteraciones posteriores.
+
+### Verificación realizada
+
+- Las pruebas unitarias de las reglas determinísticas se ejecutaron: 11 pruebas aprobadas.
+- El build de producción y la generación PWA se ejecutaron correctamente.
+- En un navegador local de escritorio se creó una jornada y un animal, se recargó por completo la página y ambos continuaron visibles desde IndexedDB.
+- No se observaron errores ni advertencias en la consola del navegador durante ese recorrido.
+
+El 07/09/2026, el usuario informó además la siguiente validación manual:
+
+- creó una jornada en Manga Casco;
+- cargó y guardó un animal, que apareció correctamente en el listado;
+- recargó la página y comprobó que los datos persistían;
+- cerró la pestaña, volvió a abrir la aplicación y comprobó que la jornada y el animal continuaban guardados;
+- verificó que el formulario quedaba preparado para cargar el animal siguiente.
+
+Con esta evidencia declarada por el usuario se considera validado el flujo mínimo y la persistencia local mediante IndexedDB.
+
+Esta evidencia no equivale a una validación offline en Android real, que continúa pendiente.
+
 ## Decisiones que continúan pendientes
 
 - contrato mínimo, herramientas y límites del agente;

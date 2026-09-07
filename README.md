@@ -64,4 +64,71 @@ El repositorio público es [pireseber-lang/TF-Agente-Diagnostico-Prenez](https:/
 
 ## Estado actual
 
-**Etapa de especificación funcional y evaluación arquitectónica.** La aplicación todavía no fue implementada, no existen corridas registradas y los prompts se conservan como una V0 mínima no calibrada ni evaluada.
+**Primer incremento funcional implementado y validado manualmente.** Ya se puede crear una jornada, cargar un animal, guardarlo en IndexedDB, verlo en la lista y recuperar ambos después de recargar completamente la página o cerrar y volver a abrir la aplicación.
+
+### Implementado
+
+- base React, Vite y TypeScript estricto;
+- manifiesto PWA y service worker generado con `vite-plugin-pwa`;
+- creación de una jornada con fecha y uno de los tres lugares válidos;
+- persistencia de la jornada y sus animales en IndexedDB mediante `idb`;
+- formulario mobile-first con identificaciones, diagnóstico, boqueo, condición corporal y observaciones;
+- validaciones determinísticas de obligatoriedad, completitud y formato;
+- normalización de identificadores a mayúsculas y sin espacios;
+- limpieza del formulario después de guardar;
+- contador y lista inmediata de animales;
+- recuperación de la jornada y la lista después de una recarga completa;
+- pruebas unitarias de las reglas incorporadas.
+
+### Pendiente de implementación o validación
+
+- búsqueda, edición y eliminación de animales;
+- detección y revisión de duplicados;
+- cierre, estadísticas e historial de jornadas cerradas;
+- exportación XLSX y respaldo JSON;
+- chequeo de preparación offline;
+- componente agéntico;
+- validación física en Android/Chrome y reapertura en modo avión.
+
+### Validación manual del incremento
+
+El 07/09/2026, el usuario informó haber validado manualmente el siguiente recorrido:
+
+- crear una jornada en Manga Casco;
+- cargar y guardar un animal;
+- comprobar su aparición inmediata en el listado con los datos ingresados;
+- recargar la página y recuperar la jornada y el animal;
+- cerrar la pestaña, volver a abrir la aplicación y recuperar nuevamente los datos;
+- comprobar que, después de guardar, el formulario queda preparado para cargar el siguiente animal.
+
+Esta validación confirma el flujo mínimo y la persistencia local mediante IndexedDB en el entorno utilizado. No demuestra todavía funcionamiento sin conexión ni compatibilidad en un celular Android real.
+
+## Ejecutar localmente
+
+Requisitos: Node.js y npm.
+
+```bash
+npm install
+npm run dev
+```
+
+Abrir:
+
+```text
+http://localhost:5173/TF-Agente-Diagnostico-Prenez/
+```
+
+Para comprobar la compilación PWA:
+
+```bash
+npm run build
+npm run preview
+```
+
+El preview queda disponible normalmente en:
+
+```text
+http://localhost:4173/TF-Agente-Diagnostico-Prenez/
+```
+
+No se instalaron todavía SheetJS ni Playwright porque este incremento no los utiliza.

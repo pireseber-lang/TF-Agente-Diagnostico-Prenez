@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Diagnóstico de preñez">
+  <rect width="512" height="512" rx="104" fill="#234a36"/>
+  <path d="M126 176c30-48 78-72 130-72s100 24 130 72l-42 26c-20-31-51-48-88-48s-68 17-88 48z" fill="#f4f1e8"/>
+  <path d="M145 215h222v121c0 42-34 76-76 76h-70c-42 0-76-34-76-76z" fill="#f4f1e8"/>
+  <circle cx="211" cy="270" r="13" fill="#234a36"/>
+  <circle cx="301" cy="270" r="13" fill="#234a36"/>
+  <path d="M220 332c20 15 52 15 72 0" fill="none" stroke="#234a36" stroke-width="14" stroke-linecap="round"/>
+</svg>
