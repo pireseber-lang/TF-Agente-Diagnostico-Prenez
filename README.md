@@ -41,7 +41,7 @@ La primera versión incluye:
 - historial local de jornadas;
 - operación offline desde celular.
 
-Las reglas determinísticas, la detección de duplicados, el cálculo de estadísticas, el cierre, el historial y la exportación también forman parte de la operación offline. La arquitectura tecnológica definitiva permanece pendiente de aprobación.
+Las reglas determinísticas, la detección de duplicados, el cálculo de estadísticas, el cierre, el historial y la exportación también forman parte de la operación offline. La arquitectura tecnológica V1 está definida como una PWA mobile-first en React y TypeScript, con IndexedDB y exportación XLSX local; su implementación y validación todavía no comenzaron.
 
 Quedan fuera de V1:
 

@@ -1,9 +1,9 @@
 # Especificación funcional V1
 
 - **Proyecto:** Diagnóstico de preñez en manga
-- **Versión del documento:** 0.2
+- **Versión del documento:** 0.3
 - **Fecha:** 2026-09-06
-- **Estado:** Definiciones funcionales V1 aprobadas; arquitectura tecnológica pendiente
+- **Estado:** Definiciones funcionales y arquitectura tecnológica V1 aprobadas; implementación pendiente
 
 ## 1. Propósito
 
@@ -196,6 +196,8 @@ Reglas de identificación aprobadas:
 | RF-18 | Mantener disponibles las funciones esenciales sin conexión a internet. |
 | RF-19 | Representar explícitamente los casos excepcionales de datos obligatorios no determinados, sin convertirlos silenciosamente en categorías productivas. |
 | RF-20 | Conservar las jornadas cerradas en el historial local hasta que el usuario las elimine manualmente. |
+| RF-21 | Exportar e importar un respaldo integral JSON versionado mediante confirmación humana. |
+| RF-22 | Mostrar un chequeo de preparación offline antes de utilizar el dispositivo en una jornada. |
 
 ## 8. Validaciones y comportamiento del agente
 
@@ -312,6 +314,8 @@ Convenciones aprobadas:
 - `lugar` representa el lugar de la jornada en una forma apta para nombres de archivo;
 - la condición corporal se almacena y exporta como número decimal, aunque la interfaz pueda mostrar coma decimal.
 
+La biblioteca de exportación y su código deben formar parte de los recursos empaquetados y precargados por la PWA. La generación del libro y la descarga no realizan llamadas de red, por lo que el `.xlsx` puede producirse completamente offline a partir de los registros locales.
+
 ## 11. Requisitos no funcionales
 
 ### 11.1 Operación offline
@@ -337,66 +341,246 @@ Convenciones aprobadas:
 
 ### 11.4 Retención, privacidad y recuperación
 
-V1 almacenará información localmente. Las jornadas se conservan mientras el usuario no las elimine manualmente. Como V1 no incluye sincronización en la nube, no garantiza recuperación después de borrar los datos del navegador, desinstalar la aplicación o perder el dispositivo; la exportación será el mecanismo disponible para obtener una copia externa.
+V1 almacenará información localmente. Las jornadas se conservan mientras el usuario no las elimine manualmente. Como V1 no incluye sincronización en la nube, se aplicarán dos defensas simples:
+
+1. solicitar almacenamiento persistente mediante `navigator.storage.persist()` y mostrar el resultado sin asumir que será concedido;
+2. permitir exportar e importar un respaldo integral JSON, versionado, que incluya jornadas, animales, alertas, revisiones y metadatos necesarios.
+
+Después de cada cierre, la aplicación ofrecerá descargar el respaldo en una ubicación externa al almacenamiento del navegador, como Descargas. La restauración validará estructura y versión, mostrará un resumen y requerirá confirmación explícita. V1 realizará restauración total y no una fusión compleja entre bases. El XLSX seguirá siendo el reporte interoperable, pero no será el único respaldo porque puede no representar todo el estado interno.
 
 ### 11.5 Trazabilidad académica en GitHub
 
 El repositorio público del proyecto es [pireseber-lang/TF-Agente-Diagnostico-Prenez](https://github.com/pireseber-lang/TF-Agente-Diagnostico-Prenez). La documentación, las decisiones, los cambios futuros y las evidencias reales de iteración deberán conservar trazabilidad en GitHub. No se usarán corridas ficticias como evidencia.
 
-### 11.6 Evaluación arquitectónica preliminar
+### 11.6 Arquitectura tecnológica final de V1
 
-La arquitectura tecnológica definitiva permanece pendiente. La siguiente comparación es una propuesta para revisión y no autoriza implementación.
+La decisión arquitectónica está cerrada para comenzar la implementación, pero sus resultados todavía no fueron construidos ni probados.
 
-#### Arquitectura recomendada: PWA mobile-first
+#### 11.6.1 Componentes elegidos
 
-| Componente | Propuesta preliminar |
+| Área | Decisión V1 |
 |---|---|
-| Interfaz | Aplicación web mobile-first en TypeScript, con un framework de interfaz liviano a seleccionar |
-| Instalación y offline | Progressive Web App con manifiesto y service worker para almacenar el shell de la aplicación |
-| Persistencia | IndexedDB detrás de una capa propia de acceso a datos y migraciones |
-| Reglas | Motor determinístico local, compuesto por funciones de dominio versionadas y comprobables |
-| Exportación | Generación de `.xlsx` en el navegador mediante una biblioteca especializada; SheetJS CE es el candidato inicial a evaluar |
-| Componente agéntico | Módulo separado del circuito crítico, con herramientas acotadas para leer registros y reglas, producir análisis y crear alertas; una futura integración con LLM sería opcional y no bloquearía la operación offline |
+| Frontend | React sobre Vite |
+| Lenguaje | TypeScript con comprobación estricta |
+| PWA | `vite-plugin-pwa` con Workbox en estrategia `generateSW` |
+| Actualizaciones | Aviso y confirmación; nunca recarga automática durante una jornada abierta |
+| Persistencia | IndexedDB como fuente local durable |
+| Acceso a datos | `idb` y una capa propia de repositorios y migraciones |
+| Estado | Estado local de React, `useReducer` y Context; IndexedDB es la fuente persistente |
+| Validaciones | Funciones puras TypeScript dentro del dominio |
+| XLSX | SheetJS Community Edition (`xlsx`) empaquetado localmente |
+| Pruebas | TypeScript, Vitest, Playwright y pruebas manuales en Android/Chrome real |
+| Entrega | Sitio estático HTTPS; GitHub Pages es el destino inicial previsto |
 
-**Ventajas:** encaja directamente con el requisito de webapp, permite una sola base de código, instalación desde el navegador y funcionamiento offline. IndexedDB ofrece almacenamiento estructurado, indexado, asíncrono y transaccional, adecuado para búsquedas locales. La exportación puede ejecutarse en el navegador.
+#### 11.6.2 Dependencias y justificación
 
-**Desventajas:** el almacenamiento web está sujeto a políticas de cuota y eventual eliminación del navegador; la aplicación debe cargarse, instalarse y completar su caché inicial con conectividad antes de depender de ella en el campo; la instalación y la descarga de archivos varían según navegador y sistema operativo; exige pruebas reales en los celulares objetivo y una estrategia explícita de respaldo.
+Dependencias de ejecución:
 
-**Complejidad estimada:** media y la menor de las alternativas consideradas para esta V1.
+| Dependencia | Motivo |
+|---|---|
+| `react` | Construir formularios y pantallas móviles mediante componentes con un modelo de estado predecible. |
+| `react-dom` | Renderizar React en el navegador. |
+| `idb` | Usar IndexedDB con promesas, transacciones y tipos sin ocultar su modelo ni incorporar una base de datos adicional. |
+| SheetJS CE (`xlsx`) | Crear un libro XLSX y descargarlo en el navegador sin servidor ni conexión. |
 
-#### Alternativa 1: aplicación web empaquetada con Capacitor
+Dependencias de desarrollo:
 
-Mantener una interfaz TypeScript/web, incorporando Capacitor para distribuirla como aplicación Android/iOS y acceder a capacidades nativas. La persistencia podría migrar a SQLite mediante un plugin validado y la exportación podría usar el sistema nativo de archivos o compartir.
+| Dependencia | Motivo |
+|---|---|
+| `typescript` | Tipar entidades, repositorios, reglas y contratos entre capas; se usará modo estricto. |
+| `vite` | Servidor de desarrollo y compilación estática optimizada. |
+| `@vitejs/plugin-react` | Integración oficial de React con el pipeline de Vite. |
+| `vite-plugin-pwa` | Generar manifiesto, service worker, precaché y actualización versionada evitando una implementación manual frágil. |
+| `vitest` | Probar con el mismo pipeline TypeScript/Vite las reglas, normalización, estadísticas y nombres de exportación. |
+| `@playwright/test` | Probar en Chromium flujos completos, IndexedDB, service worker, reinicio offline, respaldo y descargas. |
 
-**Ventajas:** mayor control del almacenamiento y de los archivos, acceso a APIs nativas y camino claro hacia tiendas de aplicaciones.
+Workbox llegará como dependencia transitiva de `vite-plugin-pwa`; no se agregará como dependencia directa salvo que una necesidad demostrada obligue a cambiar de `generateSW` a un service worker personalizado.
 
-**Desventajas:** agrega proyectos nativos, plugins, compilación por plataforma, permisos, pruebas y posible mantenimiento de tiendas. Es una complejidad prematura si la PWA satisface las pruebas en campo.
+No se agregarán Redux/Zustand, React Router, librerías de formularios, fechas, validación de esquemas ni frameworks CSS en V1. Los hooks de React, validadores propios, APIs estándar de fecha y CSS son suficientes para el alcance actual. Las dependencias se fijarán en el archivo de bloqueo del gestor de paquetes y no se cargarán desde CDN en tiempo de ejecución.
 
-**Complejidad estimada:** media-alta.
+#### 11.6.3 Núcleo determinístico offline
 
-#### Alternativa 2: Flutter para móvil y web
+El núcleo funciona íntegramente en el dispositivo y contiene:
 
-Construir una aplicación en Dart/Flutter con una base de código para Android, iOS y navegador, una base local compatible con los objetivos elegidos y una biblioteca de exportación XLSX.
+- carga y normalización de datos;
+- persistencia transaccional;
+- búsqueda, edición y eliminación;
+- detección de duplicados actuales y antecedentes históricos;
+- validaciones estructurales y estados de revisión;
+- evidencia de confirmaciones humanas;
+- estadísticas y cierre;
+- historial;
+- exportación XLSX;
+- respaldo y restauración JSON.
 
-**Ventajas:** interfaz móvil consistente, buen camino hacia binarios nativos y una única tecnología para múltiples plataformas.
+Las reglas se implementarán como funciones puras, sin importar React ni acceder directamente a IndexedDB. Los repositorios serán la única vía de persistencia. Las validaciones se ejecutarán antes de guardar, después de editar y antes de cerrar. Los índices de IndexedDB permitirán buscar las identificaciones normalizadas y detectar duplicados sin recorrer innecesariamente toda la base.
 
-**Desventajas:** introduce Dart y un ecosistema distinto al web estándar; requiere validar con especial cuidado el modo offline web, la persistencia y la descarga XLSX; para una V1 centrada en formularios puede tener mayor costo inicial.
+#### 11.6.4 Estado de interfaz
 
-**Complejidad estimada:** alta.
+IndexedDB será la fuente de verdad durable. React mantendrá solo el estado de pantalla y una proyección de los datos necesarios para la vista activa. Se utilizarán `useState` para estado local y `useReducer` con Context cuando varias pantallas necesiten compartir la jornada activa o el estado de preparación offline. No se duplicará una base completa en un store global de memoria.
 
-#### Fundamento y validaciones necesarias
+#### 11.6.5 Estrategia PWA y service worker
 
-La documentación web de referencia indica que los service workers permiten cachear recursos para operación offline y que IndexedDB permite persistir y consultar datos estructurados sin conectividad. SheetJS documenta generación de archivos XLSX directamente en el navegador. Capacitor documenta el empaquetado de aplicaciones web para plataformas nativas, y Flutter documenta una base de código dirigida a móvil y web.
+- manifiesto instalable con nombre, íconos, `start_url`, modo `standalone`, tema y alcance correctos;
+- shell completo y bundles —incluido XLSX— precargados mediante `generateSW`;
+- ausencia de llamadas obligatorias a APIs remotas;
+- pantalla offline útil en lugar de un error de red;
+- aviso **Lista para trabajar offline** únicamente cuando el service worker controle la página y termine el precaché;
+- actualización tipo `prompt`: se informa una nueva versión y el usuario decide cuándo aplicarla;
+- si hay una jornada abierta, no se permite una recarga automática causada por actualización;
+- despliegue estático sobre HTTPS, configurando la base y el alcance para `/TF-Agente-Diagnostico-Prenez/` si se usa GitHub Pages.
 
-Antes de decidir se debe realizar una prueba técnica breve en los dispositivos objetivo que verifique instalación, reapertura offline, persistencia tras cerrar el navegador, cuota/evicción, búsquedas, exportación y recuperación de archivos.
+#### 11.6.6 Instalación y comprobación antes de la jornada
+
+Preparación inicial:
+
+1. abrir la URL HTTPS en Chrome con conexión;
+2. instalar la PWA desde Chrome y abrirla desde el ícono;
+3. esperar el indicador **Lista para trabajar offline**;
+4. solicitar persistencia de almacenamiento y mostrar si fue concedida;
+5. ejecutar el autodiagnóstico técnico;
+6. activar modo avión, cerrar completamente la PWA, reabrirla y repetir el chequeo crítico.
+
+El autodiagnóstico verifica:
+
+- service worker activo, controlador y versión de caché esperada;
+- presencia de recursos críticos precargados;
+- escritura, lectura y eliminación de un registro técnico temporal en IndexedDB;
+- cuota estimada y estado de persistencia;
+- posibilidad de generar un XLSX en memoria sin red;
+- versión de aplicación y fecha/hora del último resultado exitoso.
+
+El registro temporal del autodiagnóstico vive fuera de las jornadas productivas y se elimina al concluir; no constituye una corrida del agente ni evidencia productiva. El único chequeo decisivo del riesgo de caché es la reapertura real en modo avión desde el ícono instalado.
+
+#### 11.6.7 Compatibilidad mínima
+
+- Android 10 o posterior.
+- Chrome 111 o posterior como piso técnico; para campo se recomienda la versión estable actualizada.
+- Uso normal, no incógnito.
+- Origen HTTPS y espacio de almacenamiento disponible.
+- Otros navegadores y sistemas operativos quedan fuera de la compatibilidad garantizada de V1.
+
+#### 11.6.8 Estrategia de respaldo
+
+La persistencia web se solicitará como persistente, pero ese resultado no está garantizado. El respaldo recuperable de V1 será un archivo JSON con versión de esquema y todo el estado necesario. Se ofrecerá su descarga después de cada cierre y desde el historial.
+
+La importación:
+
+1. lee el archivo elegido por el usuario;
+2. valida estructura y versión;
+3. muestra jornadas y cantidades que se restaurarán;
+4. requiere confirmación explícita;
+5. restaura el snapshot completo en una transacción o revierte si falla.
+
+No se intentará una fusión automática compleja en V1. XLSX es el reporte para uso externo y JSON es el respaldo para restaurar la aplicación.
+
+#### 11.6.9 Componente agéntico futuro
+
+El agente será un módulo separado que podrá:
+
+- recibir una vista estructurada de una jornada mediante autorización explícita;
+- consultar como herramientas las reglas y resultados determinísticos;
+- explicar alertas en lenguaje natural;
+- señalar patrones o casos que merezcan revisión y que no impliquen diagnosticar;
+- preparar un resumen de revisión para una persona.
+
+No tendrá acceso de escritura directo a IndexedDB, no modificará diagnósticos, no eliminará registros y no cerrará jornadas. Si el agente o la conexión no están disponibles, todas las capacidades enumeradas en el núcleo determinístico continúan funcionando. No se define todavía su prompt ni su contrato mínimo.
+
+#### 11.6.10 Estrategia de pruebas
+
+1. **Tipos y compilación:** comprobación estricta de TypeScript y build de producción.
+2. **Unitarias con Vitest:** normalización, obligatoriedad, duplicados, estadísticas, redondeos, nombre de archivo y serialización de respaldo.
+3. **Integración en Chromium con Playwright:** repositorios IndexedDB, migraciones, CRUD, cierre, historial, exportación, descarga y restauración.
+4. **PWA de producción:** instalación, precaché, actualización confirmada, caché fría/caliente, pérdida de red, cierre y reapertura offline.
+5. **Fallas:** cuota insuficiente, transacción abortada, respaldo inválido, descarga cancelada y actualización con jornada abierta.
+6. **Dispositivo real:** Android/Chrome objetivo en modo avión durante un recorrido completo, incluyendo XLSX y respaldo JSON.
+7. **Aceptación funcional:** ejecutar los criterios de la sección 12 y documentar resultados reales, sin confundir datos de prueba con corridas del agente.
+
+#### 11.6.11 Riesgos aceptados y validaciones pendientes
+
+Riesgos aceptados:
+
+- la primera carga y el precaché requieren conectividad;
+- el almacenamiento pertenece al origen y puede borrarse por acción del usuario, desinstalación o políticas del navegador;
+- `navigator.storage.persist()` puede ser denegado;
+- la descarga y localización de archivos varían según Chrome/Android;
+- un error de service worker puede impedir el arranque offline;
+- GitHub Pages usa un subdirectorio que exige rutas y alcance correctos.
+
+Pendiente de demostrar mediante implementación:
+
+- reapertura real en modo avión;
+- persistencia, migraciones y recuperación transaccional;
+- XLSX y respaldo/restauración JSON completamente offline;
+- coordinación segura de actualizaciones con una jornada abierta;
+- rendimiento con un volumen representativo;
+- compatibilidad efectiva en al menos un celular Android objetivo.
+
+Estas son validaciones pendientes, no capacidades ya probadas.
+
+#### 11.6.12 Estructura de carpetas propuesta
+
+Esta estructura se documenta, pero todavía no se crea:
+
+```text
+/
+├── public/
+│   └── icons/
+├── src/
+│   ├── app/
+│   │   ├── App.tsx
+│   │   └── AppContext.tsx
+│   ├── components/
+│   ├── features/
+│   │   ├── jornadas/
+│   │   ├── animales/
+│   │   ├── revision/
+│   │   ├── historial/
+│   │   ├── exportacion/
+│   │   └── preparacion-offline/
+│   ├── domain/
+│   │   ├── models/
+│   │   ├── catalogs/
+│   │   ├── normalization/
+│   │   ├── validation/
+│   │   └── statistics/
+│   ├── infrastructure/
+│   │   ├── db/
+│   │   │   ├── schema.ts
+│   │   │   ├── migrations.ts
+│   │   │   └── repositories/
+│   │   ├── export/
+│   │   └── backup/
+│   ├── agent/
+│   │   └── ports.ts
+│   ├── pwa/
+│   ├── styles/
+│   └── main.tsx
+├── tests/
+│   ├── unit/
+│   └── e2e/
+├── index.html
+├── package.json
+├── package-lock.json
+├── tsconfig.json
+└── vite.config.ts
+```
+
+`agent/ports.ts` reservará únicamente la frontera tipada del futuro agente; no contendrá un prompt definitivo ni será necesario para operar V1.
 
 Referencias primarias consultadas:
 
-- [MDN: operación offline y en segundo plano en PWA](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Offline_and_background_operation)
-- [MDN: IndexedDB API](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API)
-- [SheetJS CE: tutorial de exportación](https://docs.sheetjs.com/docs/getting-started/examples/export/)
-- [Capacitor: documentación oficial](https://capacitorjs.com/docs)
-- [Flutter: soporte web](https://docs.flutter.dev/platform-integration/web)
+- [Vite: guía y compatibilidad](https://vite.dev/guide/)
+- [React: estado con reducer y context](https://react.dev/learn/scaling-up-with-reducer-and-context)
+- [vite-plugin-pwa: registro y estado offline](https://github.com/vite-pwa/vite-plugin-pwa/blob/main/docs/frameworks/index.md)
+- [MDN: operación offline en PWA](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Offline_and_background_operation)
+- [MDN: IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API)
+- [`idb`: repositorio oficial](https://github.com/jakearchibald/idb)
+- [MDN: cuotas y persistencia de almacenamiento](https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria)
+- [SheetJS CE: escritura de archivos](https://docs.sheetjs.com/docs/api/write-options/)
+- [Chrome DevTools: depuración de PWA](https://developer.chrome.com/docs/devtools/progressive-web-apps)
+- [Vitest: integración con Vite](https://vitest.dev/guide/why.html)
+- [Playwright: service workers](https://playwright.dev/docs/service-workers)
 
 ## 12. Criterios de aceptación funcional
 
@@ -418,7 +602,10 @@ V1 será funcionalmente aceptable cuando se pueda demostrar, sin conexión:
 14. el rechazo del cierre de una jornada sin animales;
 15. la persistencia de evidencia cuando una persona decide conservar un duplicado revisado;
 16. la consulta y nueva exportación de una jornada cerrada después de volver a abrir la aplicación;
-17. la conservación de la jornada cerrada hasta su eliminación manual.
+17. la conservación de la jornada cerrada hasta su eliminación manual;
+18. la generación de XLSX sin conexión desde los datos persistidos;
+19. la exportación y restauración confirmada de un respaldo JSON válido, y el rechazo de uno inválido;
+20. el chequeo exitoso y la reapertura de la PWA instalada en modo avión en un celular Android compatible.
 
 Estos criterios describen pruebas futuras; no constituyen evidencia de que la aplicación ya exista o haya sido validada.
 
@@ -434,12 +621,9 @@ Estos criterios describen pruebas futuras; no constituyen evidencia de que la ap
 
 Antes de implementar se deben resolver o confirmar:
 
-1. definición tecnológica final detallada;
-2. contrato mínimo, herramientas y límites del componente agéntico;
-3. definición formal de la escala L0–L4 usada por la materia para reemplazar la relación preliminar;
-4. bibliotecas concretas y políticas técnicas de persistencia local y exportación XLSX;
-5. compatibilidad mínima de navegadores y celulares;
-6. longitudes máximas de los identificadores, como decisión técnica menor de implementación.
+1. contrato mínimo, herramientas y límites del componente agéntico;
+2. definición formal de la escala L0–L4 usada por la materia para reemplazar la relación preliminar;
+3. longitudes máximas de los identificadores, como decisión técnica menor de implementación.
 
 ## 15. Metodología de iteración del agente
 

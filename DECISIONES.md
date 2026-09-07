@@ -171,7 +171,7 @@ Se conserva una V0 mínima de `system_prompt.md` y `user_prompt.md`. La calibrac
 ## DEC-011 — Evaluación arquitectónica preliminar
 
 - **Fecha:** 2026-09-06
-- **Estado:** Pendiente de aprobación; no implementar
+- **Estado:** Reemplazada por DEC-013
 
 ### Propuesta recomendada
 
@@ -182,11 +182,9 @@ Una PWA mobile-first en TypeScript, con service worker para el shell offline, In
 1. Aplicación web empaquetada con Capacitor y acceso a persistencia/archivos nativos.
 2. Aplicación Flutter dirigida a móvil y web.
 
-### Motivo para mantenerla pendiente
+### Resultado
 
-La PWA parece ofrecer el mejor equilibrio entre alcance, operación web, offline y complejidad, pero antes de aprobarla se requiere una prueba técnica en los celulares objetivo. Deben validarse persistencia, cuotas y evicción, reapertura sin red, exportación XLSX, compatibilidad y recuperación de datos. La comparación completa figura en la especificación funcional.
-
-Continúan pendientes la definición tecnológica final detallada, las bibliotecas concretas de persistencia y XLSX y la compatibilidad mínima de navegadores y celulares.
+La evaluación concluyó con la decisión arquitectónica final registrada en DEC-013. Las pruebas en dispositivos continúan siendo condiciones de validación de la implementación, no decisiones arquitectónicas abiertas.
 
 ## DEC-012 — Convenciones de fecha, exportación y retención local
 
@@ -204,11 +202,106 @@ Continúan pendientes la definición tecnológica final detallada, las bibliotec
 
 La implementación deberá separar el formato visible de fecha del usado en el nombre de archivo, producir un valor numérico en Excel y ofrecer eliminación manual del historial con las salvaguardas definidas para eliminaciones.
 
+## DEC-013 — Arquitectura tecnológica final de V1
+
+- **Fecha:** 2026-09-06
+- **Estado:** Aceptada para V1; implementación todavía no iniciada
+
+### Contexto
+
+La aplicación debe operar durante una jornada completa sin internet, persistir datos estructurados, validar y buscar localmente, exportar XLSX y ejecutarse principalmente en un celular Android. La operación de campo no puede depender de un LLM. Se priorizan simplicidad, confiabilidad offline, facilidad de desarrollo asistido con Codex y demostración en un dispositivo real.
+
+### Alternativas consideradas
+
+1. **PWA web estándar:** una única aplicación web instalable, con almacenamiento y procesamiento en el navegador.
+2. **Webapp empaquetada con Capacitor:** acceso a capacidades nativas y posible SQLite, a costa de proyectos y compilaciones móviles adicionales.
+3. **Flutter para móvil y web:** base de código multiplataforma, con mayor costo inicial y un ecosistema distinto al web estándar.
+
+### Opción elegida
+
+Construir V1 como una **PWA mobile-first en React y TypeScript**, compilada con **Vite** y publicada como archivos estáticos sobre HTTPS. La estrategia concreta es:
+
+- `react` y `react-dom` para la interfaz;
+- TypeScript en modo estricto;
+- `vite-plugin-pwa`, apoyado en Workbox mediante `generateSW`, para generar manifiesto y service worker;
+- actualización del service worker mediante aviso y confirmación, nunca con recarga automática durante una jornada abierta;
+- precaché del shell completo de la aplicación y de todas las dependencias necesarias en campo;
+- IndexedDB como fuente persistente local, accedida mediante la biblioteca mínima `idb` y una capa propia de repositorios y migraciones;
+- hooks, `useReducer` y Context de React para estado efímero de interfaz, sin Redux ni otra biblioteca global;
+- reglas determinísticas en funciones puras TypeScript, separadas de React y ejecutadas antes de persistir, después de editar y antes de cerrar;
+- SheetJS Community Edition (`xlsx`) empaquetado en el bundle para generar el archivo completamente offline, sin CDN en tiempo de ejecución;
+- Vitest para pruebas unitarias y Playwright para recorridos de integración, PWA e IndexedDB en Chromium;
+- publicación inicial prevista en GitHub Pages, con `base`, alcance del service worker y rutas configurados para el subdirectorio del repositorio.
+
+No se incorporarán en V1 Redux/Zustand, React Router, librerías de formularios, fechas, validación de esquemas ni frameworks CSS. Se usarán capacidades de React, TypeScript, CSS y APIs web mientras resulten suficientes.
+
+### Separación de responsabilidades
+
+**Núcleo determinístico offline:** interfaz de carga, normalización, persistencia, búsqueda, edición, eliminación, duplicados, validaciones estructurales, alertas por reglas, estadísticas, historial, evidencia de revisión, exportación XLSX y respaldo/restauración JSON. Todo se ejecuta en el dispositivo.
+
+**Componente agéntico futuro:** módulo desacoplado que podrá recibir una vista estructurada y explícitamente autorizada de la jornada, consultar reglas como herramientas, explicar patrones o inconsistencias no triviales y preparar una lista de revisión. No escribirá directamente en IndexedDB, no modificará diagnósticos, no cerrará jornadas y su indisponibilidad no degradará el núcleo offline. Su contrato mínimo sigue pendiente.
+
+### Preparación offline antes de la jornada
+
+La aplicación no se considerará preparada solo por haber sido visitada. Incluirá un chequeo de preparación que verificará:
+
+1. service worker activo y controlando la versión actual;
+2. shell y recursos críticos precargados;
+3. escritura, lectura y eliminación de un registro técnico temporal en IndexedDB;
+4. disponibilidad de la generación XLSX en memoria;
+5. estimación de cuota y resultado de la solicitud de almacenamiento persistente;
+6. versión de aplicación verificada y momento del último chequeo exitoso.
+
+Además, antes de la primera jornada en un dispositivo se realizará una prueba humana obligatoria: instalar desde Chrome, abrir una vez con conexión, obtener el indicador **Lista para trabajar offline**, activar modo avión, cerrar por completo la PWA, reabrirla desde el ícono y completar un ciclo técnico de escritura/lectura sin crear una jornada productiva.
+
+### Respaldo y recuperación
+
+- Solicitar almacenamiento persistente con `navigator.storage.persist()` y mostrar si fue concedido; no asumir que lo fue.
+- Ofrecer un respaldo integral JSON versionado e importable con jornadas, animales, alertas, revisiones y metadatos necesarios.
+- Recomendar y ofrecer la descarga del respaldo después de cerrar cada jornada; el archivo queda fuera del almacenamiento del navegador, por ejemplo en Descargas.
+- Restaurar únicamente después de validar estructura y versión, mostrar un resumen y obtener confirmación explícita. V1 priorizará restauración total; no implementará una fusión compleja de bases.
+- Mantener XLSX como reporte interoperable, pero no usarlo como único respaldo porque no contiene necesariamente todo el estado interno.
+
+### Compatibilidad mínima elegida
+
+- Android 10 o posterior.
+- Google Chrome 111 o posterior como piso técnico del bundle; para uso de campo se recomendará Chrome actualizado y fuera de modo incógnito.
+- Instalación desde un origen HTTPS y espacio local suficiente.
+- Otros navegadores y sistemas operativos no quedan garantizados en V1.
+
+### Motivos
+
+- Es la alternativa que satisface directamente el requisito de webapp y evita una capa nativa prematura.
+- React y TypeScript facilitan una interfaz de formularios mantenible y contratos claros entre dominio, persistencia y UI.
+- `idb` conserva el modelo y las transacciones de IndexedDB con una capa pequeña basada en promesas.
+- Un service worker generado reduce errores de precaché y versionado frente a una implementación manual.
+- SheetJS puede producir XLSX desde datos en memoria y descargarlo en el navegador sin servidor.
+- La separación del dominio permite probar las reglas sin navegador ni LLM.
+
+### Riesgos aceptados
+
+- La PWA necesita una carga e instalación inicial correctas antes de perder conectividad.
+- IndexedDB y Cache Storage pertenecen al origen y pueden perderse si el usuario borra datos, desinstala o el navegador aplica evicción; la persistencia solicitada reduce, pero no elimina, el riesgo.
+- La descarga de archivos y la instalación deben probarse en Chrome/Android reales.
+- Una actualización defectuosa del service worker puede afectar el arranque offline; por eso se aplicará actualización confirmada, versionado y pruebas de reapertura.
+- GitHub Pages sirve desde un subdirectorio y requiere configurar correctamente rutas, `base` y alcance del service worker.
+- SheetJS debe quedar empaquetado y fijado en el lockfile; usarlo desde CDN en ejecución rompería la garantía offline.
+
+### Pendiente de validar mediante implementación
+
+- instalación y reapertura real en modo avión;
+- concesión o denegación de almacenamiento persistente y manejo de cuota;
+- migraciones y consistencia transaccional de IndexedDB;
+- descarga de XLSX y JSON sin conexión;
+- restauración desde un respaldo válido y rechazo de uno inválido;
+- comportamiento de actualización del service worker con una jornada abierta;
+- rendimiento de búsqueda y exportación con un volumen representativo;
+- ejecución de las pruebas automatizadas y aceptación en al menos un celular objetivo.
+
+Ninguno de estos puntos se presenta todavía como probado.
+
 ## Decisiones que continúan pendientes
 
-- definición tecnológica final detallada;
 - contrato mínimo, herramientas y límites del agente;
 - definición formal de L0–L4 según la materia;
-- bibliotecas concretas de persistencia local y XLSX;
-- compatibilidad mínima de navegadores y celulares;
 - longitudes máximas de los identificadores como decisión técnica menor de implementación.
