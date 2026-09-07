@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { ChoiceGroup } from '../../components/ChoiceGroup'
 import {
   BODY_CONDITIONS,
@@ -10,11 +10,18 @@ import {
   type Diagnosis,
   type TagColor,
 } from '../../domain/catalogs'
-import type { AnimalDraft, ValidatedAnimalData } from '../../domain/models'
+import { formatAnimalIdentification } from '../../domain/animalIdentification'
+import type {
+  Animal,
+  AnimalDraft,
+  ValidatedAnimalData,
+} from '../../domain/models'
 import { validateAnimalDraft } from '../../domain/validation/animalValidation'
 
 interface AnimalFormProps {
   onSave: (animal: ValidatedAnimalData) => Promise<void>
+  editingAnimal?: Animal
+  onCancelEdit: () => void
 }
 
 function emptyDraft(): AnimalDraft {
@@ -34,10 +41,32 @@ function displayBodyCondition(value: BodyCondition): string {
   return String(value).replace('.', ',')
 }
 
-export function AnimalForm({ onSave }: AnimalFormProps) {
+function draftFromAnimal(animal: Animal): AnimalDraft {
+  return {
+    officialPrefix: animal.officialPrefix ?? '',
+    officialIndividual: animal.officialIndividual ?? '',
+    tagColor: animal.tagColor ?? '',
+    tagNumber: animal.tagNumber ?? '',
+    diagnosis: animal.diagnosis,
+    dentition: animal.dentition,
+    bodyCondition: animal.bodyCondition,
+    observations: animal.observations,
+  }
+}
+
+export function AnimalForm({
+  onSave,
+  editingAnimal,
+  onCancelEdit,
+}: AnimalFormProps) {
   const [draft, setDraft] = useState<AnimalDraft>(emptyDraft)
   const [errors, setErrors] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    setDraft(editingAnimal ? draftFromAnimal(editingAnimal) : emptyDraft())
+    setErrors([])
+  }, [editingAnimal])
 
   function updateDraft<Key extends keyof AnimalDraft>(
     key: Key,
@@ -67,8 +96,27 @@ export function AnimalForm({ onSave }: AnimalFormProps) {
     }
   }
 
+  function handleCancelEdit() {
+    setDraft(emptyDraft())
+    setErrors([])
+    onCancelEdit()
+  }
+
   return (
-    <form className="animal-form" onSubmit={handleSubmit}>
+    <form className="animal-form" id="animal-form" onSubmit={handleSubmit}>
+      {editingAnimal && (
+        <section className="editing-banner" aria-live="polite">
+          <div>
+            <span className="eyebrow">Modo edición</span>
+            <strong>
+              Editando animal {editingAnimal.sequence}: {' '}
+              {formatAnimalIdentification(editingAnimal)}
+            </strong>
+          </div>
+          <span>El registro conservará su ID interno.</span>
+        </section>
+      )}
+
       {errors.length > 0 && (
         <section className="error-banner" aria-live="assertive">
           <strong>Revisá estos datos:</strong>
@@ -215,8 +263,22 @@ export function AnimalForm({ onSave }: AnimalFormProps) {
       </section>
 
       <div className="save-bar">
+        {editingAnimal && (
+          <button
+            className="secondary-button"
+            disabled={saving}
+            onClick={handleCancelEdit}
+            type="button"
+          >
+            Cancelar edición
+          </button>
+        )}
         <button className="primary-button" disabled={saving} type="submit">
-          {saving ? 'Guardando…' : 'Guardar y siguiente'}
+          {saving
+            ? 'Guardando…'
+            : editingAnimal
+              ? 'Guardar cambios'
+              : 'Guardar y siguiente'}
         </button>
       </div>
     </form>

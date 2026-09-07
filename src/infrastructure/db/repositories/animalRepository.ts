@@ -41,3 +41,43 @@ export async function addAnimal(
   await transaction.done
   return animal
 }
+
+export async function updateAnimal(
+  animalId: string,
+  data: ValidatedAnimalData,
+): Promise<Animal> {
+  const database = await getDatabase()
+  const transaction = database.transaction('animals', 'readwrite')
+  const currentAnimal = await transaction.store.get(animalId)
+
+  if (!currentAnimal) {
+    transaction.abort()
+    throw new Error('Animal not found')
+  }
+
+  const updatedAnimal: Animal = {
+    ...currentAnimal,
+    officialPrefix: data.officialPrefix,
+    officialIndividual: data.officialIndividual,
+    tagColor: data.tagColor,
+    tagNumber: data.tagNumber,
+    diagnosis: data.diagnosis,
+    dentition: data.dentition,
+    bodyCondition: data.bodyCondition,
+    observations: data.observations,
+    id: currentAnimal.id,
+    journeyId: currentAnimal.journeyId,
+    sequence: currentAnimal.sequence,
+    createdAt: currentAnimal.createdAt,
+    updatedAt: new Date().toISOString(),
+  }
+
+  await transaction.store.put(updatedAnimal)
+  await transaction.done
+  return updatedAnimal
+}
+
+export async function deleteAnimal(animalId: string): Promise<void> {
+  const database = await getDatabase()
+  await database.delete('animals', animalId)
+}

@@ -27,6 +27,7 @@ export interface Animal {
   bodyCondition: BodyCondition
   observations: string
   createdAt: string
+  updatedAt?: string
 }
 
 export interface AnimalDraft {

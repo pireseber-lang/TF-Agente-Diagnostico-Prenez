@@ -345,6 +345,42 @@ Con esta evidencia declarada por el usuario se considera validado el flujo míni
 
 Esta evidencia no equivale a una validación offline en Android real, que continúa pendiente.
 
+## DEC-015 — Búsqueda, edición y eliminación en jornada abierta
+
+- **Fecha:** 2026-09-07
+- **Estado:** Implementado y validado manualmente
+
+### Objetivo del incremento
+
+Permitir que el usuario encuentre y corrija animales de la jornada abierta o los elimine con confirmación explícita, sin incorporar todavía detección de duplicados ni otras funciones pendientes de V1.
+
+### Decisiones técnicas aplicadas
+
+- La búsqueda se ejecuta en memoria sobre los animales ya recuperados de IndexedDB y no modifica los registros.
+- La consulta y los identificadores se comparan con la normalización existente: mayúsculas y sin espacios.
+- Se puede buscar por cada parte de la identificación oficial o de la caravana y por sus combinaciones completas.
+- La edición reutiliza el formulario y las validaciones del alta.
+- La actualización en IndexedDB conserva `id`, `journeyId`, correlativo y fecha de creación; además registra `updatedAt`.
+- La interfaz mantiene un estado explícito de edición y ofrece **Guardar cambios** y **Cancelar edición**.
+- Cancelar solo abandona el borrador de edición y no escribe en IndexedDB.
+- La eliminación requiere una confirmación nativa que muestra el correlativo y la identificación del animal.
+- Después de actualizar o eliminar, la proyección visible se actualiza inmediatamente; IndexedDB continúa siendo la fuente persistente.
+- Se incorporó `fake-indexeddb` únicamente como dependencia de desarrollo para probar los repositorios de actualización y eliminación sin navegador. No forma parte del bundle de producción.
+
+### Verificación realizada
+
+- Se ejecutaron 20 pruebas automatizadas distribuidas en cuatro archivos: 20 aprobadas.
+- Las pruebas nuevas cubren búsquedas, ausencia de coincidencias, conservación del ID al editar, actualización persistente de campos, cancelación sin alterar animales, eliminación persistente y actualización de la cantidad visible.
+- El build de producción y la generación PWA finalizaron correctamente.
+
+El 07/09/2026, el usuario informó haber validado manualmente esta funcionalidad en la aplicación real. Comprobó la persistencia de varios animales en la jornada, la búsqueda, la edición, la eliminación y la actualización del listado después de las operaciones.
+
+Con esta evidencia declarada por el usuario se consideran validadas manualmente la búsqueda, la edición y la eliminación. Esta evidencia no equivale todavía a una validación offline ni en un celular Android real.
+
+### Alcance no incorporado
+
+Este incremento no implementa duplicados, estadísticas, cierre de jornada, historial completo, XLSX ni componente agéntico.
+
 ## Decisiones que continúan pendientes
 
 - contrato mínimo, herramientas y límites del agente;

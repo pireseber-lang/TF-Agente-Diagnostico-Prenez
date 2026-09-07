@@ -230,6 +230,22 @@ textarea {
   text-align: center;
 }
 
+.search-card {
+  display: grid;
+  gap: 0.45rem;
+  margin-bottom: 0.75rem;
+  padding: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--paper);
+}
+
+.search-result-count {
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
 .animal-list {
   display: grid;
   gap: 0.55rem;
@@ -271,6 +287,60 @@ textarea {
 
 .animal-main span,
 .animal-details {
+  color: var(--ink-muted);
+  font-size: 0.82rem;
+}
+
+.animal-actions {
+  display: flex;
+  grid-column: 2;
+  gap: 0.5rem;
+  margin-top: 0.45rem;
+}
+
+.secondary-button,
+.danger-button {
+  min-height: 48px;
+  border: 1.5px solid var(--green-700);
+  border-radius: 12px;
+  background: #fff;
+  padding: 0.65rem 0.85rem;
+  font-weight: 800;
+}
+
+.danger-button {
+  border-color: #c67a72;
+  color: var(--error);
+}
+
+.secondary-button:disabled,
+.danger-button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.compact-button {
+  min-height: 42px;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.editing-banner {
+  display: grid;
+  gap: 0.45rem;
+  margin-bottom: 0.9rem;
+  padding: 0.9rem;
+  border: 2px solid #d69f32;
+  border-radius: 14px;
+  background: #fff8e8;
+  color: var(--green-900);
+}
+
+.editing-banner .eyebrow {
+  color: #8a5a00;
+}
+
+.editing-banner span:last-child {
   color: var(--ink-muted);
   font-size: 0.82rem;
 }
@@ -350,6 +420,8 @@ textarea {
 }
 
 .save-bar {
+  display: flex;
+  gap: 0.65rem;
   position: sticky;
   z-index: 5;
   bottom: 0;
@@ -359,6 +431,11 @@ textarea {
   border-top: 1px solid var(--border);
   background: rgba(247, 244, 235, 0.94);
   backdrop-filter: blur(9px);
+}
+
+.save-bar .primary-button,
+.save-bar .secondary-button {
+  flex: 1 1 0;
 }
 
 .error-banner {

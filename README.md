@@ -41,7 +41,7 @@ La primera versión incluye:
 - historial local de jornadas;
 - operación offline desde celular.
 
-Las reglas determinísticas, la detección de duplicados, el cálculo de estadísticas, el cierre, el historial y la exportación también forman parte de la operación offline. La arquitectura tecnológica V1 está definida como una PWA mobile-first en React y TypeScript, con IndexedDB y exportación XLSX local; su implementación y validación todavía no comenzaron.
+Las reglas determinísticas, la detección de duplicados, el cálculo de estadísticas, el cierre, el historial y la exportación también forman parte de la operación offline. La arquitectura tecnológica V1 está definida como una PWA mobile-first en React y TypeScript, con IndexedDB y exportación XLSX local; su implementación se realiza en incrementos verificables.
 
 Quedan fuera de V1:
 
@@ -64,7 +64,7 @@ El repositorio público es [pireseber-lang/TF-Agente-Diagnostico-Prenez](https:/
 
 ## Estado actual
 
-**Primer incremento funcional implementado y validado manualmente.** Ya se puede crear una jornada, cargar un animal, guardarlo en IndexedDB, verlo en la lista y recuperar ambos después de recargar completamente la página o cerrar y volver a abrir la aplicación.
+**Primer y segundo incrementos funcionales implementados y validados manualmente.** Además de crear una jornada y cargar animales, la jornada abierta permite buscar, editar y eliminar registros localmente.
 
 ### Implementado
 
@@ -78,11 +78,16 @@ El repositorio público es [pireseber-lang/TF-Agente-Diagnostico-Prenez](https:/
 - limpieza del formulario después de guardar;
 - contador y lista inmediata de animales;
 - recuperación de la jornada y la lista después de una recarga completa;
-- pruebas unitarias de las reglas incorporadas.
+- búsqueda local por identificación oficial, caravana o sus combinaciones, sin distinguir mayúsculas, minúsculas ni espacios;
+- edición con precarga de datos, las mismas validaciones del alta y conservación del ID interno;
+- cancelación de edición sin modificar el registro;
+- eliminación con confirmación humana que identifica el animal;
+- actualización inmediata del contador y el listado después de editar o eliminar;
+- persistencia en IndexedDB de las ediciones y eliminaciones;
+- pruebas unitarias y de integración de las reglas y los repositorios incorporados.
 
 ### Pendiente de implementación o validación
 
-- búsqueda, edición y eliminación de animales;
 - detección y revisión de duplicados;
 - cierre, estadísticas e historial de jornadas cerradas;
 - exportación XLSX y respaldo JSON;
@@ -90,7 +95,7 @@ El repositorio público es [pireseber-lang/TF-Agente-Diagnostico-Prenez](https:/
 - componente agéntico;
 - validación física en Android/Chrome y reapertura en modo avión.
 
-### Validación manual del incremento
+### Validaciones manuales
 
 El 07/09/2026, el usuario informó haber validado manualmente el siguiente recorrido:
 
@@ -101,7 +106,17 @@ El 07/09/2026, el usuario informó haber validado manualmente el siguiente recor
 - cerrar la pestaña, volver a abrir la aplicación y recuperar nuevamente los datos;
 - comprobar que, después de guardar, el formulario queda preparado para cargar el siguiente animal.
 
-Esta validación confirma el flujo mínimo y la persistencia local mediante IndexedDB en el entorno utilizado. No demuestra todavía funcionamiento sin conexión ni compatibilidad en un celular Android real.
+Esta validación confirmó el flujo mínimo y la persistencia local mediante IndexedDB en el entorno utilizado.
+
+El 07/09/2026, el usuario informó haber validado manualmente la segunda funcionalidad en la aplicación real. Comprobó:
+
+- persistencia de varios animales en la jornada;
+- búsqueda de animales;
+- edición de registros;
+- eliminación de registros;
+- actualización del listado después de las operaciones.
+
+Estas validaciones no demuestran todavía funcionamiento sin conexión ni compatibilidad en un celular Android real.
 
 ## Ejecutar localmente
 
@@ -131,4 +146,4 @@ El preview queda disponible normalmente en:
 http://localhost:4173/TF-Agente-Diagnostico-Prenez/
 ```
 
-No se instalaron todavía SheetJS ni Playwright porque este incremento no los utiliza.
+No se instalaron todavía SheetJS ni Playwright porque estos incrementos no los utilizan. `fake-indexeddb` se usa solo durante las pruebas para verificar los repositorios locales sin incorporarse al bundle de producción.
