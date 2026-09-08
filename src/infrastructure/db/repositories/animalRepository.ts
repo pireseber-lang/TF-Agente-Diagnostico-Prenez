@@ -1,4 +1,8 @@
-import type { Animal, ValidatedAnimalData } from '../../../domain/models'
+import type {
+  Animal,
+  DuplicateReviewEvidence,
+  ValidatedAnimalData,
+} from '../../../domain/models'
 import { getDatabase } from '../database'
 
 export async function listAnimalsByJourney(
@@ -17,6 +21,7 @@ export async function listAnimalsByJourney(
 export async function addAnimal(
   journeyId: string,
   data: ValidatedAnimalData,
+  duplicateReview?: DuplicateReviewEvidence,
 ): Promise<Animal> {
   const database = await getDatabase()
   const transaction = database.transaction('animals', 'readwrite')
@@ -35,6 +40,7 @@ export async function addAnimal(
     sequence: nextSequence,
     ...data,
     createdAt: new Date().toISOString(),
+    ...(duplicateReview ? { duplicateReviews: [duplicateReview] } : {}),
   }
 
   await transaction.store.add(animal)
@@ -45,6 +51,7 @@ export async function addAnimal(
 export async function updateAnimal(
   animalId: string,
   data: ValidatedAnimalData,
+  duplicateReview?: DuplicateReviewEvidence,
 ): Promise<Animal> {
   const database = await getDatabase()
   const transaction = database.transaction('animals', 'readwrite')
@@ -70,6 +77,9 @@ export async function updateAnimal(
     sequence: currentAnimal.sequence,
     createdAt: currentAnimal.createdAt,
     updatedAt: new Date().toISOString(),
+    duplicateReviews: duplicateReview
+      ? [...(currentAnimal.duplicateReviews ?? []), duplicateReview]
+      : currentAnimal.duplicateReviews,
   }
 
   await transaction.store.put(updatedAnimal)

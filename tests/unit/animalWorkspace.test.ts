@@ -81,4 +81,56 @@ describe('animalWorkspaceReducer', () => {
     expect(savedState.editingAnimalId).toBeUndefined()
     expect(savedState.animals).toEqual([updatedAnimal])
   })
+
+  it('cancelar una advertencia de duplicado no crea un registro', () => {
+    const review = {
+      data: {
+        officialPrefix: 'AI892',
+        officialIndividual: 'PU50',
+        diagnosis: 'Vacía' as const,
+        dentition: 'Diente medio' as const,
+        bodyCondition: 2.5 as const,
+        observations: '',
+      },
+      matches: [{ animal, reasons: ['official' as const] }],
+    }
+    const warningState = animalWorkspaceReducer(
+      { animals: [animal], screen: 'entry' },
+      { type: 'duplicateReviewRequested', review },
+    )
+    const canceledState = animalWorkspaceReducer(warningState, {
+      type: 'duplicateReviewCanceled',
+    })
+
+    expect(warningState.animals).toHaveLength(1)
+    expect(canceledState.animals).toEqual([animal])
+    expect(canceledState.pendingDuplicateReview).toBeUndefined()
+  })
+
+  it('guardar de todos modos agrega el nuevo registro', () => {
+    const duplicateAnimal = { ...animal, id: 'animal-2', sequence: 2 }
+    const state = {
+      animals: [animal],
+      screen: 'entry' as const,
+      pendingDuplicateReview: {
+        data: {
+          officialPrefix: 'AI892',
+          officialIndividual: 'PU50',
+          diagnosis: 'Vacía' as const,
+          dentition: 'Diente medio' as const,
+          bodyCondition: 2.5 as const,
+          observations: '',
+        },
+        matches: [{ animal, reasons: ['official' as const] }],
+      },
+    }
+    const result = animalWorkspaceReducer(state, {
+      type: 'animalCreated',
+      animal: duplicateAnimal,
+    })
+
+    expect(result.animals).toHaveLength(2)
+    expect(result.animals[1]).toEqual(duplicateAnimal)
+    expect(result.pendingDuplicateReview).toBeUndefined()
+  })
 })

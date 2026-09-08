@@ -423,6 +423,55 @@ El 07/09/2026, el usuario informó haber validado manualmente que:
 
 Con esta evidencia declarada por el usuario se considera validada manualmente la mejora de navegación. Todavía no equivale a una validación en campo, sin conexión o en un celular Android real. Este cambio no incorpora nuevas reglas de negocio ni implementa duplicados, estadísticas, cierre, historial, XLSX o componente agéntico.
 
+## DEC-017 — Control local de posibles duplicados con decisión humana
+
+- **Fecha:** 2026-09-07
+- **Estado:** Implementado y validado manualmente
+
+### Objetivo
+
+Advertir antes de guardar cuando una identificación completa coincide con otro animal de la jornada abierta, sin sustituir la decisión de la persona que realiza la carga ni bloquear casos legítimos.
+
+### Regla implementada
+
+La comparación se realiza localmente sobre los animales de la jornada actual y considera posible duplicado cuando coincide al menos uno de estos pares completos:
+
+- prefijo e identificación individual oficial;
+- color y número de caravana.
+
+Se ignoran mayúsculas, minúsculas y espacios innecesarios. Una coincidencia únicamente de prefijo, individual, color o número no alcanza para generar la advertencia. Durante una edición se excluye el propio ID interno y se comparan los datos contra los demás animales.
+
+### Supervisión humana
+
+Ante una coincidencia, la aplicación interrumpe el guardado automático y muestra los datos disponibles de los registros existentes, incluidos identificación, diagnóstico y condición corporal.
+
+- **Cancelar:** no persiste nada y mantiene los datos del formulario para revisión.
+- **Guardar de todos modos:** crea o actualiza el registro y conserva evidencia local de la revisión, con fecha, animales coincidentes y tipo de coincidencia.
+
+La aplicación no elimina, fusiona, corrige ni modifica automáticamente otro animal o el diagnóstico veterinario. Esta decisión implementa el criterio aprobado en DEC-004 y permite distinguir un error probable de un caso que el usuario desea conservar conscientemente.
+
+### Implementación y verificación
+
+- La detección es una función determinística independiente de React e IndexedDB.
+- El estado de revisión humana se integra al flujo existente de alta y edición.
+- La evidencia se persiste junto al animal sin requerir un cambio de esquema de IndexedDB.
+- No se agregaron dependencias ni servicios externos.
+- Se ejecutaron 33 pruebas automatizadas: 33 aprobadas.
+- El control TypeScript y el build de producción PWA finalizaron correctamente.
+
+El 07/09/2026, el usuario informó haber validado manualmente que:
+
+- la identificación oficial completa genera la advertencia antes de guardar;
+- la advertencia muestra información suficiente del registro existente;
+- **Cancelar** no guarda y conserva los datos ingresados;
+- **Guardar de todos modos** conserva ambos registros;
+- el contador aumenta únicamente después de confirmar el guardado;
+- igual prefijo con distinto ID individual no genera advertencia;
+- igual color con distinto número no genera advertencia;
+- la decisión final permanece bajo supervisión humana.
+
+Con esta evidencia declarada por el usuario se considera validado manualmente el control de posibles duplicados. Esto no equivale todavía a una validación en campo, sin conexión o en un celular Android real. No se implementaron estadísticas, cierre, historial, XLSX ni componente agéntico.
+
 ## Decisiones que continúan pendientes
 
 - contrato mínimo, herramientas y límites del agente;

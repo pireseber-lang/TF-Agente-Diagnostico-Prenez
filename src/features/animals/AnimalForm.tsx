@@ -11,6 +11,7 @@ import {
   type TagColor,
 } from '../../domain/catalogs'
 import { formatAnimalIdentification } from '../../domain/animalIdentification'
+import type { DuplicateMatch } from '../../domain/duplicateDetection'
 import type {
   Animal,
   AnimalDraft,
@@ -19,9 +20,12 @@ import type {
 import { validateAnimalDraft } from '../../domain/validation/animalValidation'
 
 interface AnimalFormProps {
-  onSave: (animal: ValidatedAnimalData) => Promise<void>
+  onSave: (animal: ValidatedAnimalData) => Promise<boolean>
   editingAnimal?: Animal
+  duplicateMatches?: DuplicateMatch[]
   onCancelEdit: () => void
+  onCancelDuplicateReview: () => void
+  onConfirmDuplicateReview: () => Promise<void>
 }
 
 function emptyDraft(): AnimalDraft {
@@ -57,7 +61,10 @@ function draftFromAnimal(animal: Animal): AnimalDraft {
 export function AnimalForm({
   onSave,
   editingAnimal,
+  duplicateMatches = [],
   onCancelEdit,
+  onCancelDuplicateReview,
+  onConfirmDuplicateReview,
 }: AnimalFormProps) {
   const [draft, setDraft] = useState<AnimalDraft>(emptyDraft)
   const [errors, setErrors] = useState<string[]>([])
@@ -68,10 +75,22 @@ export function AnimalForm({
     setErrors([])
   }, [editingAnimal])
 
+  useEffect(() => {
+    if (duplicateMatches.length === 0) return
+    window.requestAnimationFrame(() => {
+      document
+        .getElementById('duplicate-warning')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }, [duplicateMatches])
+
   function updateDraft<Key extends keyof AnimalDraft>(
     key: Key,
     value: AnimalDraft[Key],
   ) {
+    if (duplicateMatches.length > 0) {
+      onCancelDuplicateReview()
+    }
     setDraft((current) => ({ ...current, [key]: value }))
   }
 
@@ -87,8 +106,8 @@ export function AnimalForm({
     setSaving(true)
     setErrors([])
     try {
-      await onSave(validation.data)
-      setDraft(emptyDraft())
+      const saved = await onSave(validation.data)
+      if (saved) setDraft(emptyDraft())
     } catch {
       setErrors(['No se pudo guardar el animal en este dispositivo.'])
     } finally {
@@ -100,6 +119,19 @@ export function AnimalForm({
     setDraft(emptyDraft())
     setErrors([])
     onCancelEdit()
+  }
+
+  async function handleConfirmDuplicate() {
+    setSaving(true)
+    setErrors([])
+    try {
+      await onConfirmDuplicateReview()
+      setDraft(emptyDraft())
+    } catch {
+      setErrors(['No se pudo guardar el animal en este dispositivo.'])
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -125,6 +157,64 @@ export function AnimalForm({
               <li key={error}>{error}</li>
             ))}
           </ul>
+        </section>
+      )}
+
+      {duplicateMatches.length > 0 && (
+        <section
+          className="duplicate-warning"
+          id="duplicate-warning"
+          role="alert"
+        >
+          <span className="eyebrow">Revisión humana requerida</span>
+          <h2>Posible animal duplicado</h2>
+          <p>
+            No se guardó el registro. Revisá las coincidencias encontradas y
+            decidí cómo continuar.
+          </p>
+          <ul className="duplicate-match-list">
+            {duplicateMatches.map(({ animal }) => (
+              <li key={animal.id}>
+                <strong>
+                  Animal {animal.sequence}: {' '}
+                  {formatAnimalIdentification(animal)}
+                </strong>
+                {animal.officialPrefix && animal.officialIndividual && (
+                  <span>
+                    Oficial: {animal.officialPrefix} {animal.officialIndividual}
+                  </span>
+                )}
+                {animal.tagColor && animal.tagNumber && (
+                  <span>
+                    Caravana: {animal.tagColor} {animal.tagNumber}
+                  </span>
+                )}
+                <span>Diagnóstico: {animal.diagnosis}</span>
+                <span>
+                  Condición corporal: {' '}
+                  {displayBodyCondition(animal.bodyCondition)}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <div className="duplicate-actions">
+            <button
+              className="secondary-button"
+              disabled={saving}
+              onClick={onCancelDuplicateReview}
+              type="button"
+            >
+              Cancelar
+            </button>
+            <button
+              className="duplicate-confirm-button"
+              disabled={saving}
+              onClick={handleConfirmDuplicate}
+              type="button"
+            >
+              {saving ? 'Guardando…' : 'Guardar de todos modos'}
+            </button>
+          </div>
         </section>
       )}
 

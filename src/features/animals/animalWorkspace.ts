@@ -1,9 +1,17 @@
-import type { Animal } from '../../domain/models'
+import type { DuplicateMatch } from '../../domain/duplicateDetection'
+import type { Animal, ValidatedAnimalData } from '../../domain/models'
+
+export interface PendingDuplicateReview {
+  data: ValidatedAnimalData
+  matches: DuplicateMatch[]
+  editingAnimalId?: string
+}
 
 export interface AnimalWorkspaceState {
   animals: Animal[]
   screen: 'entry' | 'animals'
   editingAnimalId?: string
+  pendingDuplicateReview?: PendingDuplicateReview
 }
 
 export const initialAnimalWorkspaceState: AnimalWorkspaceState = {
@@ -18,6 +26,8 @@ export type AnimalWorkspaceAction =
   | { type: 'entryShown' }
   | { type: 'editingStarted'; animalId: string }
   | { type: 'editingCanceled' }
+  | { type: 'duplicateReviewRequested'; review: PendingDuplicateReview }
+  | { type: 'duplicateReviewCanceled' }
   | { type: 'animalUpdated'; animal: Animal }
   | { type: 'animalDeleted'; animalId: string }
 
@@ -29,27 +39,52 @@ export function animalWorkspaceReducer(
     case 'animalsLoaded':
       return { animals: action.animals, screen: 'entry' }
     case 'animalCreated':
-      return { ...state, animals: [...state.animals, action.animal] }
+      return {
+        ...state,
+        animals: [...state.animals, action.animal],
+        pendingDuplicateReview: undefined,
+      }
     case 'animalsShown':
-      return { ...state, screen: 'animals', editingAnimalId: undefined }
+      return {
+        ...state,
+        screen: 'animals',
+        editingAnimalId: undefined,
+        pendingDuplicateReview: undefined,
+      }
     case 'entryShown':
-      return { ...state, screen: 'entry', editingAnimalId: undefined }
+      return {
+        ...state,
+        screen: 'entry',
+        editingAnimalId: undefined,
+        pendingDuplicateReview: undefined,
+      }
     case 'editingStarted':
       return state.animals.some((animal) => animal.id === action.animalId)
         ? {
             ...state,
             screen: 'entry',
             editingAnimalId: action.animalId,
+            pendingDuplicateReview: undefined,
           }
         : state
     case 'editingCanceled':
-      return { ...state, screen: 'animals', editingAnimalId: undefined }
+      return {
+        ...state,
+        screen: 'animals',
+        editingAnimalId: undefined,
+        pendingDuplicateReview: undefined,
+      }
+    case 'duplicateReviewRequested':
+      return { ...state, pendingDuplicateReview: action.review }
+    case 'duplicateReviewCanceled':
+      return { ...state, pendingDuplicateReview: undefined }
     case 'animalUpdated':
       return {
         animals: state.animals.map((animal) =>
           animal.id === action.animal.id ? action.animal : animal,
         ),
         screen: 'animals',
+        pendingDuplicateReview: undefined,
       }
     case 'animalDeleted':
       return {

@@ -478,6 +478,66 @@ textarea {
   padding-left: 1.25rem;
 }
 
+.duplicate-warning {
+  margin-bottom: 0.9rem;
+  padding: 1rem;
+  border: 2px solid #d69f32;
+  border-radius: 16px;
+  background: #fff8e8;
+  box-shadow: var(--shadow);
+}
+
+.duplicate-warning .eyebrow {
+  color: #8a5a00;
+}
+
+.duplicate-warning > p {
+  color: #694b12;
+}
+
+.duplicate-match-list {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.duplicate-match-list li {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  border: 1px solid #dfc17c;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.duplicate-match-list span {
+  color: var(--ink-muted);
+  font-size: 0.84rem;
+}
+
+.duplicate-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.duplicate-confirm-button {
+  min-height: 48px;
+  border: 0;
+  border-radius: 12px;
+  background: #9a5d00;
+  color: #fff;
+  padding: 0.65rem 0.85rem;
+  font-weight: 800;
+}
+
+.duplicate-confirm-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 .loading-state {
   display: grid;
   min-height: 100vh;

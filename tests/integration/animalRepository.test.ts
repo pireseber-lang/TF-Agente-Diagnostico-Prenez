@@ -1,6 +1,7 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { ValidatedAnimalData } from '../../src/domain/models'
+import { createDuplicateReviewEvidence } from '../../src/domain/duplicateDetection'
 import { getDatabase } from '../../src/infrastructure/db/database'
 import {
   addAnimal,
@@ -67,5 +68,19 @@ describe('animalRepository', () => {
     await deleteAnimal(created.id)
 
     expect(await listAnimalsByJourney('journey-1')).toEqual([])
+  })
+
+  it('guardar de todos modos persiste el duplicado y la revisión humana', async () => {
+    const existing = await addAnimal('journey-1', baseData)
+    const evidence = createDuplicateReviewEvidence(
+      [{ animal: existing, reasons: ['official'] }],
+      '2026-09-07T12:00:00.000Z',
+    )
+    const duplicate = await addAnimal('journey-1', baseData, evidence)
+    const persisted = await listAnimalsByJourney('journey-1')
+
+    expect(persisted).toHaveLength(2)
+    expect(duplicate.duplicateReviews).toEqual([evidence])
+    expect(persisted[1]?.duplicateReviews).toEqual([evidence])
   })
 })

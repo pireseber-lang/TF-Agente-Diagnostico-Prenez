@@ -1,6 +1,10 @@
 import { useEffect, useReducer, useState } from 'react'
 import type { Place } from '../domain/catalogs'
 import { formatAnimalIdentification } from '../domain/animalIdentification'
+import {
+  createDuplicateReviewEvidence,
+  findDuplicateMatches,
+} from '../domain/duplicateDetection'
 import type { Animal, Journey, ValidatedAnimalData } from '../domain/models'
 import { formatLocalDate } from '../domain/normalization'
 import { AnimalForm } from '../features/animals/AnimalForm'
@@ -71,16 +75,67 @@ export function App() {
     dispatch({ type: 'animalsLoaded', animals: [] })
   }
 
-  async function handleSaveAnimal(data: ValidatedAnimalData) {
-    if (!journey) return
+  async function handleSaveAnimal(
+    data: ValidatedAnimalData,
+  ): Promise<boolean> {
+    if (!journey) return false
+    const matches = findDuplicateMatches(data, workspace.animals)
+    if (matches.length > 0) {
+      dispatch({
+        type: 'duplicateReviewRequested',
+        review: { data, matches },
+      })
+      return false
+    }
+
     const createdAnimal = await addAnimal(journey.id, data)
+    dispatch({ type: 'animalCreated', animal: createdAnimal })
+    return true
+  }
+
+  async function handleUpdateAnimal(
+    data: ValidatedAnimalData,
+  ): Promise<boolean> {
+    if (!editingAnimal) return false
+    const matches = findDuplicateMatches(
+      data,
+      workspace.animals,
+      editingAnimal.id,
+    )
+    if (matches.length > 0) {
+      dispatch({
+        type: 'duplicateReviewRequested',
+        review: { data, matches, editingAnimalId: editingAnimal.id },
+      })
+      return false
+    }
+
+    const updatedAnimal = await updateAnimal(editingAnimal.id, data)
+    dispatch({ type: 'animalUpdated', animal: updatedAnimal })
+    return true
+  }
+
+  async function handleConfirmDuplicateReview() {
+    const review = workspace.pendingDuplicateReview
+    if (!review || !journey) return
+
+    const evidence = createDuplicateReviewEvidence(review.matches)
+    if (review.editingAnimalId) {
+      const updatedAnimal = await updateAnimal(
+        review.editingAnimalId,
+        review.data,
+        evidence,
+      )
+      dispatch({ type: 'animalUpdated', animal: updatedAnimal })
+      return
+    }
+
+    const createdAnimal = await addAnimal(journey.id, review.data, evidence)
     dispatch({ type: 'animalCreated', animal: createdAnimal })
   }
 
-  async function handleUpdateAnimal(data: ValidatedAnimalData) {
-    if (!editingAnimal) return
-    const updatedAnimal = await updateAnimal(editingAnimal.id, data)
-    dispatch({ type: 'animalUpdated', animal: updatedAnimal })
+  function handleCancelDuplicateReview() {
+    dispatch({ type: 'duplicateReviewCanceled' })
   }
 
   function handleEditAnimal(animal: Animal) {
@@ -189,8 +244,13 @@ export function App() {
                 )}
               </section>
               <AnimalForm
+                duplicateMatches={
+                  workspace.pendingDuplicateReview?.matches
+                }
                 editingAnimal={editingAnimal}
                 onCancelEdit={handleCancelEdit}
+                onCancelDuplicateReview={handleCancelDuplicateReview}
+                onConfirmDuplicateReview={handleConfirmDuplicateReview}
                 onSave={editingAnimal ? handleUpdateAnimal : handleSaveAnimal}
               />
             </>

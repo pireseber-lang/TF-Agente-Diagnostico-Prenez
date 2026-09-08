@@ -28,6 +28,18 @@ export interface Animal {
   observations: string
   createdAt: string
   updatedAt?: string
+  duplicateReviews?: DuplicateReviewEvidence[]
+}
+
+export type DuplicateMatchReason = 'official' | 'colorTag'
+
+export interface DuplicateReviewEvidence {
+  decision: 'keep-both'
+  reviewedAt: string
+  matches: Array<{
+    animalId: string
+    reasons: DuplicateMatchReason[]
+  }>
 }
 
 export interface AnimalDraft {
