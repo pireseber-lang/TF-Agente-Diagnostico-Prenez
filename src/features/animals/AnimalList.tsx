@@ -8,6 +8,7 @@ interface AnimalListProps {
   deletingAnimalId?: string
   onEdit: (animal: Animal) => void
   onDelete: (animal: Animal) => void
+  onBack: () => void
 }
 
 function displayBodyCondition(value: number): string {
@@ -19,6 +20,7 @@ export function AnimalList({
   deletingAnimalId,
   onEdit,
   onDelete,
+  onBack,
 }: AnimalListProps) {
   const [query, setQuery] = useState('')
   const filteredAnimals = filterAnimalsBySearch(animals, query)
@@ -29,9 +31,16 @@ export function AnimalList({
       <div className="list-heading">
         <div>
           <span className="eyebrow">Jornada actual</span>
-          <h2>Animales cargados: {animals.length}</h2>
+          <h2>Animales cargados</h2>
+          <span className="list-total">Total: {animals.length}</span>
         </div>
-        <span className="local-badge">Guardado local</span>
+        <button
+          className="secondary-button compact-button"
+          onClick={onBack}
+          type="button"
+        >
+          Volver a carga
+        </button>
       </div>
 
       <div className="search-card">

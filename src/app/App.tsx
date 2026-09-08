@@ -97,6 +97,14 @@ export function App() {
     dispatch({ type: 'editingCanceled' })
   }
 
+  function handleShowAnimals() {
+    dispatch({ type: 'animalsShown' })
+  }
+
+  function handleShowEntry() {
+    dispatch({ type: 'entryShown' })
+  }
+
   async function handleDeleteAnimal(animal: Animal) {
     const identification = formatAnimalIdentification(animal)
     const confirmed = window.confirm(
@@ -150,17 +158,43 @@ export function App() {
             <time dateTime={journey.date}>{formatLocalDate(journey.date)}</time>
           </section>
 
-          <AnimalList
-            animals={workspace.animals}
-            deletingAnimalId={deletingAnimalId}
-            onDelete={handleDeleteAnimal}
-            onEdit={handleEditAnimal}
-          />
-          <AnimalForm
-            editingAnimal={editingAnimal}
-            onCancelEdit={handleCancelEdit}
-            onSave={editingAnimal ? handleUpdateAnimal : handleSaveAnimal}
-          />
+          {workspace.screen === 'animals' ? (
+            <AnimalList
+              animals={workspace.animals}
+              deletingAnimalId={deletingAnimalId}
+              onBack={handleShowEntry}
+              onDelete={handleDeleteAnimal}
+              onEdit={handleEditAnimal}
+            />
+          ) : (
+            <>
+              <section className="load-overview card">
+                <div>
+                  <span className="eyebrow">Carga de la jornada</span>
+                  <h2>Animales cargados: {workspace.animals.length}</h2>
+                  <p>El listado completo se consulta en una pantalla separada.</p>
+                </div>
+                <button
+                  className="primary-button view-animals-button"
+                  disabled={Boolean(editingAnimal)}
+                  onClick={handleShowAnimals}
+                  type="button"
+                >
+                  Ver animales cargados
+                </button>
+                {editingAnimal && (
+                  <small className="editing-navigation-hint">
+                    Guardá o cancelá la edición para volver al listado.
+                  </small>
+                )}
+              </section>
+              <AnimalForm
+                editingAnimal={editingAnimal}
+                onCancelEdit={handleCancelEdit}
+                onSave={editingAnimal ? handleUpdateAnimal : handleSaveAnimal}
+              />
+            </>
+          )}
         </>
       )}
     </main>

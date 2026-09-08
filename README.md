@@ -64,7 +64,7 @@ El repositorio público es [pireseber-lang/TF-Agente-Diagnostico-Prenez](https:/
 
 ## Estado actual
 
-**Primer y segundo incrementos funcionales implementados y validados manualmente.** Además de crear una jornada y cargar animales, la jornada abierta permite buscar, editar y eliminar registros localmente.
+**Primer y segundo incrementos funcionales, junto con la separación entre carga y listado, implementados y validados manualmente.** La jornada abierta permite cargar sin recorrer el listado completo y consultar los animales en una pantalla separada.
 
 ### Implementado
 
@@ -84,6 +84,10 @@ El repositorio público es [pireseber-lang/TF-Agente-Diagnostico-Prenez](https:/
 - eliminación con confirmación humana que identifica el animal;
 - actualización inmediata del contador y el listado después de editar o eliminar;
 - persistencia en IndexedDB de las ediciones y eliminaciones;
+- pantalla de carga enfocada en el contador, el acceso al listado y el formulario, sin renderizar todos los animales;
+- pantalla separada **Animales cargados** con búsqueda, edición, eliminación y regreso a carga;
+- navegación interna sin React Router ni dependencias adicionales;
+- retorno al listado después de guardar o cancelar una edición;
 - pruebas unitarias y de integración de las reglas y los repositorios incorporados.
 
 ### Pendiente de implementación o validación
@@ -117,6 +121,16 @@ El 07/09/2026, el usuario informó haber validado manualmente la segunda funcion
 - actualización del listado después de las operaciones.
 
 Estas validaciones no demuestran todavía funcionamiento sin conexión ni compatibilidad en un celular Android real.
+
+### Mejora de usabilidad validada manualmente
+
+Durante la prueba de uso se detectó que mostrar el listado completo antes del formulario obligaría a recorrer cientos de registros en jornadas de 300 a 600 animales. Para evitar ese problema, la carga y el listado se separaron en dos pantallas internas.
+
+La pantalla de carga conserva jornada, fecha, lugar, contador, acceso al listado y formulario. La pantalla **Animales cargados** concentra búsqueda, listado, edición y eliminación. Al editar, el formulario se abre con los datos precargados; guardar o cancelar vuelve al listado.
+
+El 07/09/2026, el usuario informó haber validado manualmente la separación de pantallas, el contador, la navegación de ida y vuelta, la búsqueda, la edición, la eliminación y la persistencia de los animales previamente cargados. También confirmó que el flujo resulta adecuado para jornadas con muchos animales porque evita recorrer un listado largo antes de cargar el siguiente.
+
+Esta validación no equivale todavía a una prueba en campo, sin conexión o en un celular Android real.
 
 ## Ejecutar localmente
 

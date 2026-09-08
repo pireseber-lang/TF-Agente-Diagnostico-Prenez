@@ -381,6 +381,48 @@ Con esta evidencia declarada por el usuario se consideran validadas manualmente 
 
 Este incremento no implementa duplicados, estadísticas, cierre de jornada, historial completo, XLSX ni componente agéntico.
 
+## DEC-016 — Separar la carga del listado de animales
+
+- **Fecha:** 2026-09-07
+- **Estado:** Implementado y validado manualmente
+
+### Problema detectado
+
+Durante la prueba de uso se observó que el listado completo aparecía antes del formulario. En una jornada con 300, 500 o 600 animales, esa disposición obligaría a hacer un desplazamiento excesivo para volver a cargar cada registro y degradaría el trabajo continuo en manga.
+
+### Decisión
+
+Separar la jornada abierta en dos pantallas internas administradas con estado de React, sin incorporar React Router:
+
+1. **Carga:** muestra jornada, fecha, lugar, contador, acceso al listado y formulario completo, pero no renderiza el listado.
+2. **Animales cargados:** muestra título, total, búsqueda, listado, edición, eliminación y la acción **Volver a carga**.
+
+Editar desde el listado abre la pantalla de carga en modo edición. Guardar cambios o cancelar la edición vuelve al listado, donde el usuario puede comprobar el resultado. Desde allí, **Volver a carga** deja nuevamente disponible el formulario vacío para continuar la jornada.
+
+### Motivos
+
+- Mantener el formulario accesible con una cantidad grande de animales.
+- Evitar renderizar y recorrer cientos de tarjetas durante la carga continua.
+- Conservar las operaciones ya validadas de búsqueda, edición y eliminación.
+- Mantener navegación offline y evitar una dependencia innecesaria de routing.
+
+### Verificación realizada
+
+- Se agregaron pruebas del cambio de pantalla sin alterar animales y del recorrido listado → edición → listado.
+- Se ejecutaron 23 pruebas automatizadas: 23 aprobadas.
+- El build de producción y la generación PWA finalizaron correctamente.
+
+El 07/09/2026, el usuario informó haber validado manualmente que:
+
+- la carga ya no muestra el listado completo y sí presenta el contador;
+- **Ver animales cargados** abre la pantalla separada con total y listado;
+- búsqueda, edición y eliminación continúan funcionando;
+- **Volver a carga** regresa correctamente al formulario;
+- los animales previamente cargados persisten;
+- el flujo evita recorrer un listado largo y resulta adecuado para jornadas con muchos animales.
+
+Con esta evidencia declarada por el usuario se considera validada manualmente la mejora de navegación. Todavía no equivale a una validación en campo, sin conexión o en un celular Android real. Este cambio no incorpora nuevas reglas de negocio ni implementa duplicados, estadísticas, cierre, historial, XLSX o componente agéntico.
+
 ## Decisiones que continúan pendientes
 
 - contrato mínimo, herramientas y límites del agente;
