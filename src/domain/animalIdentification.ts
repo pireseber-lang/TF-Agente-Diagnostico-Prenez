@@ -19,8 +19,12 @@ export function formatAnimalIdentification(
     )
   }
 
-  if (animal.tagColor && animal.tagNumber) {
-    identifications.push(`${animal.tagColor} ${animal.tagNumber}`)
+  if (animal.tagColor) {
+    identifications.push(
+      animal.tagNumber
+        ? `${animal.tagColor} ${animal.tagNumber}`
+        : animal.tagColor,
+    )
   }
 
   return identifications.join(' · ')

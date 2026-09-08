@@ -67,7 +67,32 @@ describe('findDuplicateMatches', () => {
     expect(matches).toEqual([])
   })
 
-  it('no marca duplicado si coincide solo el color', () => {
+  it('no marca duplicado con el mismo color si ambos carecen de número', () => {
+    const colorOnlyAnimal: Animal = {
+      ...existingAnimal,
+      officialPrefix: undefined,
+      officialIndividual: undefined,
+      tagColor: 'Violeta',
+      tagNumber: undefined,
+    }
+    const matches = findDuplicateMatches(
+      candidate({ tagColor: 'Violeta', tagNumber: undefined }),
+      [colorOnlyAnimal],
+    )
+
+    expect(matches).toEqual([])
+  })
+
+  it('no marca duplicado si uno de los registros tiene solo color', () => {
+    const matches = findDuplicateMatches(
+      candidate({ tagColor: 'Verde', tagNumber: undefined }),
+      [existingAnimal],
+    )
+
+    expect(matches).toEqual([])
+  })
+
+  it('no marca duplicado con el mismo color y distinto número', () => {
     const matches = findDuplicateMatches(
       candidate({ tagColor: 'Verde', tagNumber: '9999' }),
       [existingAnimal],

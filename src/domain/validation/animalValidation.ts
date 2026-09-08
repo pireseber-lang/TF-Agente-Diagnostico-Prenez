@@ -26,8 +26,7 @@ export function validateAnimalDraft(
 
   const officialStarted = Boolean(officialPrefix || officialIndividual)
   const officialComplete = Boolean(officialPrefix && officialIndividual)
-  const tagStarted = Boolean(draft.tagColor || tagNumber)
-  const tagComplete = Boolean(draft.tagColor && tagNumber)
+  const hasColorTag = Boolean(draft.tagColor)
 
   if (officialStarted && !officialComplete) {
     errors.push('Completá prefijo e identificación individual oficial.')
@@ -41,15 +40,15 @@ export function validateAnimalDraft(
     errors.push('La identificación individual oficial debe ser alfanumérica.')
   }
 
-  if (tagStarted && !tagComplete) {
-    errors.push('Completá color y número de caravana.')
+  if (tagNumber && !draft.tagColor) {
+    errors.push('Seleccioná un color para el número de caravana informado.')
   }
 
   if (tagNumber && !numericPattern.test(tagNumber)) {
     errors.push('El número de caravana debe contener solamente números.')
   }
 
-  if (!officialComplete && !tagComplete) {
+  if (!officialComplete && !hasColorTag) {
     errors.push('Ingresá al menos una identificación completa.')
   }
 
@@ -83,8 +82,11 @@ export function validateAnimalDraft(
       ...(officialComplete
         ? { officialPrefix, officialIndividual }
         : {}),
-      ...(tagComplete
-        ? { tagColor: draft.tagColor || undefined, tagNumber }
+      ...(hasColorTag
+        ? {
+            tagColor: draft.tagColor || undefined,
+            ...(tagNumber ? { tagNumber } : {}),
+          }
         : {}),
       diagnosis: draft.diagnosis as ValidatedAnimalData['diagnosis'],
       dentition: draft.dentition as ValidatedAnimalData['dentition'],

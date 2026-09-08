@@ -64,7 +64,7 @@ El repositorio público es [pireseber-lang/TF-Agente-Diagnostico-Prenez](https:/
 
 ## Estado actual
 
-**Los incrementos de carga, persistencia, consulta, navegación y control de posibles duplicados están implementados y validados manualmente.** La aplicación mantiene la decisión final bajo supervisión humana.
+**Los incrementos de carga, persistencia, consulta, navegación, control de posibles duplicados y caravana con número opcional están implementados y validados manualmente.**
 
 ### Implementado
 
@@ -73,6 +73,7 @@ El repositorio público es [pireseber-lang/TF-Agente-Diagnostico-Prenez](https:/
 - creación de una jornada con fecha y uno de los tres lugares válidos;
 - persistencia de la jornada y sus animales en IndexedDB mediante `idb`;
 - formulario mobile-first con identificaciones, diagnóstico, boqueo, condición corporal y observaciones;
+- identificación por caravana válida con color solo o con color y número opcional;
 - validaciones determinísticas de obligatoriedad, completitud y formato;
 - normalización de identificadores a mayúsculas y sin espacios;
 - limpieza del formulario después de guardar;
@@ -145,6 +146,16 @@ Si hay coincidencias, el registro no se guarda automáticamente. La advertencia 
 La aplicación solo detecta y advierte: no corrige diagnósticos ni elimina, combina o modifica animales por su cuenta. Esto busca reducir errores de carga sin bloquear casos legítimos.
 
 El 07/09/2026, el usuario informó haber validado manualmente la detección por identificación oficial completa, la advertencia previa con información suficiente, la cancelación sin guardado, la conservación consciente de ambos registros y la actualización condicional del contador. También comprobó que igual prefijo con distinto ID individual e igual color con distinto número no generan advertencia, y confirmó que la decisión final permanece bajo supervisión humana.
+
+### Corrección de identificación por caravana validada manualmente
+
+La operación real incluye vacas con caravana de color sin numeración. Por ese motivo, la identificación por caravana ahora admite **color solo** o **color + número**. El color es obligatorio cuando se utiliza este esquema; el número es opcional y, si se informa, debe ser estrictamente numérico. Un número sin color continúa siendo inválido.
+
+Compartir únicamente el color no genera una alerta fuerte de duplicado, porque varias vacas pueden usar el mismo color sin numeración. La coincidencia fuerte por caravana requiere que ambos registros tengan color y número y que ambos valores coincidan. El listado muestra solamente el color cuando no existe número, sin completar valores artificiales.
+
+El 07/09/2026, el usuario informó haber validado manualmente la carga de color sin número y de color con número, su presentación correcta en el listado y el funcionamiento normal de la identificación oficial. También comprobó que compartir solamente el color sin una numeración completa coincidente no genera una advertencia fuerte y que la coincidencia completa de color y número sí mantiene el control de posible duplicado.
+
+Esta evidencia valida la corrección en la aplicación utilizada por el usuario, pero no equivale todavía a una prueba en campo, sin conexión o en un celular Android real.
 
 ## Ejecutar localmente
 

@@ -154,7 +154,7 @@ El usuario puede:
 | Prefijo oficial | Alfanumérico | Condicional | Ejemplos de formato: `AI892`, `OV319` |
 | ID oficial individual | Alfanumérico | Condicional | Ejemplos de formato: `PU50`, `B728` |
 | Color de caravana | Opción única | Condicional | Verde, Rojo, Blanco, Violeta, Celeste, Naranja o Amarilla |
-| Número de caravana de color | Numérico | Condicional | Solo dígitos; ejemplos: `1342`, `528` |
+| Número de caravana de color | Numérico | Opcional | Solo dígitos cuando se informa; ejemplos: `1342`, `528` |
 | Diagnóstico | Opción única | Sí | Preñada Cabeza, Preñada Cuerpo, Preñada Cola, Preñada Robo o Vacía |
 | Boqueo | Opción única | Sí | Diente lleno, Diente medio, Diente cuarto o Sin Diente |
 | Condición corporal | Número decimal | Sí | Se almacena como número; la interfaz muestra 2; 2,25; 2,5; 2,75; 3; 3,25; 3,5; 3,75; 4; 4,25; 4,5 |
@@ -163,9 +163,10 @@ El usuario puede:
 Reglas de identificación aprobadas:
 
 - La identificación oficial se considera completa cuando tiene prefijo e ID individual.
-- La identificación por caravana de color se considera completa cuando tiene color y número.
+- La identificación por caravana de color es válida cuando tiene color; el número es opcional.
+- No se admite un número de caravana sin color.
 - Para guardar debe existir al menos uno de esos dos esquemas completos.
-- Un animal puede tener solamente la identificación oficial completa, solamente la caravana de color completa o ambas completas.
+- Un animal puede tener solamente la identificación oficial completa, solamente una caravana con color —con número opcional— o ambas identificaciones.
 - No se permite guardar una identificación parcial, aunque el otro esquema esté completo.
 - El número de la caravana de color es estrictamente numérico.
 - Los identificadores admiten únicamente valores alfanuméricos.
@@ -178,7 +179,7 @@ Reglas de identificación aprobadas:
 |---|---|
 | RF-01 | Crear una jornada con fecha y lugar. |
 | RF-02 | Cargar un animal con identificación oficial, caravana de color o ambas. |
-| RF-03 | Impedir el guardado cuando no exista al menos una identificación completa o cuando exista un par de identificación parcial. |
+| RF-03 | Impedir el guardado cuando no exista al menos una identificación válida, cuando la identificación oficial esté parcial o cuando exista un número de caravana sin color. |
 | RF-04 | Exigir diagnóstico, boqueo y condición corporal en el flujo normal; registrar observaciones de forma opcional. |
 | RF-05 | Guardar localmente y preparar inmediatamente el formulario siguiente. |
 | RF-06 | Mostrar un contador actualizado de animales cargados. |
@@ -214,6 +215,7 @@ Reglas de identificación aprobadas:
 
 - **Duplicado oficial en la jornada:** misma combinación de prefijo oficial e ID oficial individual en otro registro de la jornada actual.
 - **Duplicado de caravana en la jornada:** misma combinación de color y número de caravana en otro registro de la jornada actual.
+- Compartir solamente el color, cuando uno o ambos registros no tienen número, no constituye un duplicado fuerte.
 - **Antecedente oficial histórico:** la misma identificación oficial aparece en una jornada anterior.
 - **Antecedente de caravana histórico:** la misma caravana de color aparece en una jornada anterior.
 - **Dato obligatorio no determinado:** caso excepcional marcado explícitamente para revisión, sin valor diagnóstico inventado.
@@ -589,7 +591,7 @@ V1 será funcionalmente aceptable cuando se pueda demostrar, sin conexión:
 1. el inicio de una jornada válida para cada lugar permitido;
 2. la carga consecutiva de animales usando solo identificación oficial, solo caravana de color y ambas;
 3. el rechazo de un registro sin ninguna identificación completa;
-4. el rechazo de cualquier identificación parcial y de números de caravana con caracteres no numéricos;
+4. la aceptación de caravanas con color solo o con color y número, y el rechazo de números sin color o con caracteres no numéricos;
 5. la obligatoriedad de diagnóstico, boqueo y condición corporal en el flujo normal;
 6. la actualización del contador y la limpieza segura del formulario;
 7. la búsqueda, edición y eliminación antes del cierre;

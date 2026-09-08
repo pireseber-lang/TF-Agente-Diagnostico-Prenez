@@ -44,7 +44,7 @@ Si excepcionalmente un dato obligatorio no puede determinarse, la aplicación de
 ## DEC-003 — Completitud y formato de identificaciones
 
 - **Fecha:** 2026-09-06
-- **Estado:** Aceptada para V1
+- **Estado:** Reemplazada parcialmente por DEC-018
 
 ### Decisión
 
@@ -471,6 +471,51 @@ El 07/09/2026, el usuario informó haber validado manualmente que:
 - la decisión final permanece bajo supervisión humana.
 
 Con esta evidencia declarada por el usuario se considera validado manualmente el control de posibles duplicados. Esto no equivale todavía a una validación en campo, sin conexión o en un celular Android real. No se implementaron estadísticas, cierre, historial, XLSX ni componente agéntico.
+
+## DEC-018 — Número opcional en la caravana de color
+
+- **Fecha:** 2026-09-07
+- **Estado:** Implementado y validado manualmente
+
+### Motivo de la corrección
+
+En la operación real existen vacas que tienen una caravana de color sin numeración. Exigir siempre color y número impedía registrar correctamente esos animales y no representaba el trabajo efectivo en manga.
+
+### Regla corregida
+
+- La identificación oficial continúa requiriendo prefijo e ID individual.
+- La identificación por caravana es válida con color solo o con color y número.
+- El color es obligatorio cuando se utiliza esta identificación.
+- El número es opcional; si se informa, debe contener exclusivamente dígitos.
+- Un número sin color es inválido.
+- El animal debe conservar al menos una identificación válida: oficial completa, caravana con color o ambas.
+
+Esta decisión reemplaza únicamente las reglas de DEC-003 que exigían color y número y rechazaban toda caravana sin ambos valores.
+
+### Duplicados y presentación
+
+Compartir únicamente el color no genera un duplicado fuerte, incluso cuando uno o ambos registros carecen de número. La coincidencia fuerte por caravana requiere que ambos registros tengan color y número y que coincidan los dos valores. Esto evita alertas falsas, porque múltiples animales pueden usar caravanas del mismo color sin numeración.
+
+El formulario indica que el número es opcional. El listado muestra el color solo cuando no hay número y muestra **Color Número** cuando ambos están disponibles; nunca agrega un cero u otro valor artificial.
+
+### Verificación realizada
+
+- Se actualizaron las pruebas de validación para color solo, color con número, número sin color y número no numérico.
+- Se agregaron casos de duplicados con color solo, color y número iguales y números diferentes.
+- Se agregaron pruebas de presentación para color solo y color con número.
+- Se ejecutaron 38 pruebas automatizadas: 38 aprobadas.
+- El control TypeScript y el build de producción PWA finalizaron correctamente.
+
+El 07/09/2026, el usuario informó haber validado manualmente que:
+
+- una caravana puede guardarse solo con color;
+- el listado muestra únicamente el color, sin agregar cero ni otro valor artificial;
+- color y número continúan funcionando correctamente;
+- compartir solamente el color, sin número completo coincidente, no genera una advertencia fuerte;
+- la coincidencia completa de color y número continúa generando la advertencia de posible duplicado;
+- la identificación oficial continúa funcionando normalmente.
+
+Con esta evidencia declarada por el usuario se considera validada manualmente la corrección. Esto no equivale todavía a una validación en campo, sin conexión o en un celular Android real. La corrección no incorpora funcionalidades nuevas ni modifica el control humano de duplicados.
 
 ## Decisiones que continúan pendientes
 

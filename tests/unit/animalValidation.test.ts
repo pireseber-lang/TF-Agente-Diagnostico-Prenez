@@ -21,7 +21,21 @@ describe('validateAnimalDraft', () => {
     expect(validateAnimalDraft(validDraft()).valid).toBe(true)
   })
 
-  it('acepta una caravana de color completa', () => {
+  it('acepta una caravana con color sin número', () => {
+    const result = validateAnimalDraft(
+      validDraft({
+        officialPrefix: '',
+        officialIndividual: '',
+        tagColor: 'Violeta',
+      }),
+    )
+
+    expect(result.valid).toBe(true)
+    expect(result.data?.tagColor).toBe('Violeta')
+    expect(result.data?.tagNumber).toBeUndefined()
+  })
+
+  it('acepta una caravana con color y número', () => {
     const result = validateAnimalDraft(
       validDraft({
         officialPrefix: '',
@@ -62,17 +76,19 @@ describe('validateAnimalDraft', () => {
     )
   })
 
-  it('rechaza una caravana de color parcial', () => {
+  it('rechaza un número de caravana sin color', () => {
     const result = validateAnimalDraft(
       validDraft({
         officialPrefix: '',
         officialIndividual: '',
-        tagColor: 'Celeste',
+        tagNumber: '1523',
       }),
     )
 
     expect(result.valid).toBe(false)
-    expect(result.errors).toContain('Completá color y número de caravana.')
+    expect(result.errors).toContain(
+      'Seleccioná un color para el número de caravana informado.',
+    )
   })
 
   it('exige diagnóstico', () => {

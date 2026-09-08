@@ -184,9 +184,10 @@ export function AnimalForm({
                     Oficial: {animal.officialPrefix} {animal.officialIndividual}
                   </span>
                 )}
-                {animal.tagColor && animal.tagNumber && (
+                {animal.tagColor && (
                   <span>
-                    Caravana: {animal.tagColor} {animal.tagNumber}
+                    Caravana: {animal.tagColor}
+                    {animal.tagNumber ? ` ${animal.tagNumber}` : ''}
                   </span>
                 )}
                 <span>Diagnóstico: {animal.diagnosis}</span>
@@ -274,7 +275,7 @@ export function AnimalForm({
             </select>
           </label>
           <label className="field-label">
-            Número
+            Número (opcional)
             <input
               autoComplete="off"
               inputMode="numeric"
