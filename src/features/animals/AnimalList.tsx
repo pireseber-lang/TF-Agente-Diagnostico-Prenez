@@ -10,6 +10,7 @@ interface AnimalListProps {
   onDelete?: (animal: Animal) => void
   onBack: () => void
   backLabel?: string
+  contextLabel?: string
   readOnly?: boolean
 }
 
@@ -24,6 +25,7 @@ export function AnimalList({
   onDelete,
   onBack,
   backLabel = 'Volver a carga',
+  contextLabel = 'Jornada actual',
   readOnly = false,
 }: AnimalListProps) {
   const [query, setQuery] = useState('')
@@ -34,7 +36,7 @@ export function AnimalList({
     <section className="animal-list-section">
       <div className="list-heading">
         <div>
-          <span className="eyebrow">Jornada actual</span>
+          <span className="eyebrow">{contextLabel}</span>
           <h2>Animales cargados</h2>
           <span className="list-total">Total: {animals.length}</span>
         </div>

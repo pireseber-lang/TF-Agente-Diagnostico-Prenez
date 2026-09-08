@@ -9,7 +9,8 @@ interface ClosedJourneySummaryProps {
   journey: Journey
   animals: Animal[]
   onViewAnimals: () => void
-  onNewJourney: () => void
+  onNewJourney?: () => void
+  consulted?: boolean
 }
 
 function Metric({ count, percentage }: { count: number; percentage: number }) {
@@ -25,13 +26,20 @@ export function ClosedJourneySummary({
   animals,
   onViewAnimals,
   onNewJourney,
+  consulted = false,
 }: ClosedJourneySummaryProps) {
   const statistics = calculateJourneyStatistics(animals)
 
   return (
     <section className="closed-summary">
       <div className="closed-heading card">
-        <span className="eyebrow">Jornada finalizada</span>
+        <span className="eyebrow">
+          {consulted
+            ? `Jornada consultada · ${journey.status === 'open' ? 'Abierta' : 'Cerrada'}`
+            : journey.status === 'closed'
+              ? 'Jornada finalizada'
+              : 'Jornada abierta'}
+        </span>
         <h2>{journey.place}</h2>
         <time dateTime={journey.date}>{formatLocalDate(journey.date)}</time>
         <strong>Total de vacas: {statistics.totalAnimals}</strong>
@@ -102,13 +110,15 @@ export function ClosedJourneySummary({
         >
           Ver animales cargados
         </button>
-        <button
-          className="secondary-button new-journey-button"
-          onClick={onNewJourney}
-          type="button"
-        >
-          Nueva jornada
-        </button>
+        {onNewJourney && (
+          <button
+            className="secondary-button new-journey-button"
+            onClick={onNewJourney}
+            type="button"
+          >
+            Nueva jornada
+          </button>
+        )}
       </div>
     </section>
   )

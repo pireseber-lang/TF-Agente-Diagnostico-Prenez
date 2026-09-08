@@ -15,6 +15,11 @@ export interface Journey {
   closedAt?: string
 }
 
+export interface JourneyHistoryItem {
+  journey: Journey
+  animalCount: number
+}
+
 export interface Animal {
   id: string
   journeyId: string

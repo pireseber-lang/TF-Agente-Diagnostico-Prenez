@@ -130,14 +130,17 @@ No se permite cerrar una jornada sin animales ni con datos obligatorios todavía
 
 ### 5.6 Historial
 
-El usuario puede:
+La implementación actual permite:
 
-- listar las jornadas cerradas almacenadas localmente;
-- abrir una jornada anterior;
+- listar todas las jornadas almacenadas localmente, ordenadas desde la más reciente;
+- distinguir fecha, lugar, estado y cantidad de animales;
+- abrir una jornada anterior como consulta temporal sin cambiar la jornada actual;
 - consultar su fecha, lugar y resumen;
 - consultar sus animales;
-- volver a exportar el archivo Excel;
-- eliminarla manualmente, con confirmación.
+- buscar dentro de sus animales en modo de solo lectura;
+- volver explícitamente al historial o a la jornada actual.
+
+El historial no permite actualmente reabrir, editar ni eliminar jornadas, ni volver a exportar Excel. Estas capacidades permanecen pendientes. Si no existen jornadas, se informa claramente que no hay registros.
 
 ## 6. Modelo funcional de datos
 
@@ -305,9 +308,9 @@ El sistema presenta estas interpretaciones como información operativa y no deci
 
 La implementación actual persiste solamente el estado y la fecha/hora de cierre; el resumen se reconstruye mediante funciones puras a partir de los animales conservados. La jornada cerrada impide nuevas altas y permite consultar su listado en modo de solo lectura. El cierre y el resumen fueron validados manualmente en una prueba controlada, no en campo.
 
-Desde una jornada cerrada puede iniciarse otra jornada independiente. La recuperación prioriza una jornada abierta y carga exclusivamente sus animales por `journeyId`; si no existe una abierta, muestra la jornada más reciente. Esta capacidad y el caso con cero vacas preñadas fueron validados manualmente en una prueba controlada, no en campo. La jornada anterior continúa almacenada aunque todavía no exista una interfaz para navegar hacia ella.
+Desde una jornada cerrada puede iniciarse otra jornada independiente. La recuperación prioriza una jornada abierta y carga exclusivamente sus animales por `journeyId`; si no existe una abierta, muestra la jornada más reciente. Esta capacidad y el caso con cero vacas preñadas fueron validados manualmente en una prueba controlada, no en campo.
 
-La próxima funcionalidad prevista es el historial general para consultar jornadas anteriores, sus resúmenes y sus animales. La navegación histórica, la reapertura y la exportación XLSX todavía no están implementadas.
+El historial permite consultar jornadas anteriores, sus resúmenes recalculados y sus animales sin reemplazar la jornada actual. Las jornadas consultadas son estrictamente de solo lectura y sus datos se aíslan mediante `journeyId`. Esta capacidad fue validada manualmente en una prueba controlada, no en campo. La reapertura, edición o eliminación histórica y la exportación XLSX todavía no están implementadas.
 
 ## 10. Exportación Excel
 

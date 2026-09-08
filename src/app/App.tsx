@@ -5,7 +5,12 @@ import {
   createDuplicateReviewEvidence,
   findDuplicateMatches,
 } from '../domain/duplicateDetection'
-import type { Animal, Journey, ValidatedAnimalData } from '../domain/models'
+import type {
+  Animal,
+  Journey,
+  JourneyHistoryItem,
+  ValidatedAnimalData,
+} from '../domain/models'
 import { formatLocalDate } from '../domain/normalization'
 import { AnimalForm } from '../features/animals/AnimalForm'
 import { AnimalList } from '../features/animals/AnimalList'
@@ -15,6 +20,7 @@ import {
 } from '../features/animals/animalWorkspace'
 import { CloseJourneyReview } from '../features/journeys/CloseJourneyReview'
 import { ClosedJourneySummary } from '../features/journeys/ClosedJourneySummary'
+import { JourneyHistory } from '../features/journeys/JourneyHistory'
 import { NewJourneyForm } from '../features/journeys/NewJourneyForm'
 import {
   addAnimal,
@@ -26,7 +32,14 @@ import {
   closeJourney,
   createJourney,
   getCurrentJourney,
+  listJourneyHistory,
 } from '../infrastructure/db/repositories/journeyRepository'
+
+type AppView =
+  | 'current'
+  | 'history'
+  | 'historical-summary'
+  | 'historical-animals'
 
 export function App() {
   const [journey, setJourney] = useState<Journey>()
@@ -38,6 +51,11 @@ export function App() {
   const [loadError, setLoadError] = useState('')
   const [operationError, setOperationError] = useState('')
   const [deletingAnimalId, setDeletingAnimalId] = useState<string>()
+  const [appView, setAppView] = useState<AppView>('current')
+  const [historyItems, setHistoryItems] = useState<JourneyHistoryItem[]>([])
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [consultedJourney, setConsultedJourney] = useState<Journey>()
+  const [consultedAnimals, setConsultedAnimals] = useState<Animal[]>([])
 
   const editingAnimal = workspace.animals.find(
     (animal) => animal.id === workspace.editingAnimalId,
@@ -175,6 +193,60 @@ export function App() {
     dispatch({ type: 'newJourneyCanceled' })
   }
 
+  async function handleShowHistory() {
+    setOperationError('')
+    setAppView('history')
+    setHistoryLoading(true)
+    try {
+      setHistoryItems(await listJourneyHistory())
+    } catch {
+      setOperationError(
+        'No se pudo leer el historial guardado en este dispositivo.',
+      )
+    } finally {
+      setHistoryLoading(false)
+    }
+  }
+
+  function handleShowCurrentJourney() {
+    setOperationError('')
+    setAppView('current')
+    setConsultedJourney(undefined)
+    setConsultedAnimals([])
+  }
+
+  async function handleSelectHistoricalJourney(item: JourneyHistoryItem) {
+    setOperationError('')
+    setHistoryLoading(true)
+    try {
+      const animals = await listAnimalsByJourney(item.journey.id)
+      setConsultedJourney(item.journey)
+      setConsultedAnimals(animals)
+      setAppView('historical-summary')
+    } catch {
+      setOperationError(
+        'No se pudo leer la jornada seleccionada en este dispositivo.',
+      )
+    } finally {
+      setHistoryLoading(false)
+    }
+  }
+
+  function handleBackToHistory() {
+    setOperationError('')
+    setAppView('history')
+  }
+
+  function handleShowHistoricalAnimals() {
+    setOperationError('')
+    setAppView('historical-animals')
+  }
+
+  function handleShowHistoricalSummary() {
+    setOperationError('')
+    setAppView('historical-summary')
+  }
+
   function handleStartClosing() {
     setOperationError('')
     if (workspace.animals.length === 0) {
@@ -242,10 +314,60 @@ export function App() {
         </div>
       </header>
 
+      <nav className="app-navigation" aria-label="Navegación principal">
+        {appView === 'current' ? (
+          <button
+            className="secondary-button"
+            onClick={() => void handleShowHistory()}
+            type="button"
+          >
+            Historial de jornadas
+          </button>
+        ) : (
+          <button
+            className="secondary-button"
+            onClick={handleShowCurrentJourney}
+            type="button"
+          >
+            Volver a jornada actual
+          </button>
+        )}
+      </nav>
+
       {loadError && <p className="error-banner">{loadError}</p>}
       {operationError && <p className="error-banner">{operationError}</p>}
 
-      {!journey ? (
+      {appView === 'history' ? (
+        <JourneyHistory
+          items={historyItems}
+          loading={historyLoading}
+          onSelect={(item) => void handleSelectHistoricalJourney(item)}
+        />
+      ) : appView === 'historical-summary' && consultedJourney ? (
+        <>
+          <button
+            className="secondary-button history-back-button"
+            onClick={handleBackToHistory}
+            type="button"
+          >
+            Volver al historial
+          </button>
+          <ClosedJourneySummary
+            animals={consultedAnimals}
+            consulted
+            journey={consultedJourney}
+            onViewAnimals={handleShowHistoricalAnimals}
+          />
+        </>
+      ) : appView === 'historical-animals' && consultedJourney ? (
+        <AnimalList
+          animals={consultedAnimals}
+          backLabel="Volver al resumen"
+          contextLabel="Jornada consultada"
+          onBack={handleShowHistoricalSummary}
+          readOnly
+        />
+      ) : !journey ? (
         <NewJourneyForm onCreate={handleCreateJourney} />
       ) : (
         <>

@@ -99,6 +99,16 @@ h3 {
   box-shadow: 0 4px 18px rgba(23, 52, 38, 0.22);
 }
 
+.app-navigation {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.9rem;
+}
+
+.app-navigation .secondary-button {
+  width: 100%;
+}
+
 .brand-mark {
   display: grid;
   flex: 0 0 46px;
@@ -381,6 +391,70 @@ textarea {
 .new-journey-button {
   width: 100%;
   min-height: 58px;
+}
+
+.history-heading p {
+  margin-bottom: 0;
+  color: var(--ink-muted);
+}
+
+.history-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.history-card {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.history-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.history-card time {
+  color: var(--green-900);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.history-card h3 {
+  margin: 0.2rem 0 0;
+  text-transform: none;
+}
+
+.journey-status {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.journey-status--open {
+  background: var(--green-100);
+  color: var(--green-800);
+}
+
+.journey-status--closed {
+  background: #e8e7e1;
+  color: #555e58;
+}
+
+.history-animal-count {
+  color: var(--ink-muted);
+  font-weight: 750;
+}
+
+.history-back-button {
+  width: 100%;
+  margin-bottom: 0.9rem;
 }
 
 .statistics-card h3 {
@@ -737,6 +811,11 @@ textarea {
     padding-right: 1.25rem;
     padding-left: 1.25rem;
     border-radius: 0 0 22px 22px;
+  }
+
+  .app-navigation .secondary-button,
+  .history-back-button {
+    width: auto;
   }
 
   .card,

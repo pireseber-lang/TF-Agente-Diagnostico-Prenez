@@ -593,6 +593,41 @@ Esta evidencia no constituye una prueba en condiciones reales de campo. La jorna
 
 La próxima funcionalidad prevista es **Historial de jornadas**, para consultar jornadas anteriores, resúmenes y animales desde la interfaz. Esta etapa no incorpora historial, navegación histórica, reapertura, XLSX, respaldo, agente ni nuevas estadísticas.
 
+## DEC-021 — Historial de jornadas como consulta separada
+
+- **Fecha:** 2026-09-08
+- **Estado:** Implementado y validado manualmente en prueba controlada
+
+### Contexto
+
+IndexedDB ya conserva varias jornadas y sus animales, pero la aplicación solo mostraba la abierta o la cerrada más reciente. Era necesario recuperar la visibilidad de las jornadas anteriores sin convertir el historial en una segunda fuente de verdad ni habilitar modificaciones retrospectivas.
+
+### Decisión
+
+- **Historial de jornadas** está disponible desde la navegación principal y no cambia el estado de la jornada actual.
+- El repositorio obtiene todas las jornadas persistidas, las ordena por `createdAt` descendente y calcula la cantidad de animales mediante el índice existente `by-journey-id`.
+- La lista muestra fecha, lugar, estado abierto/cerrado y cantidad de animales. Un estado abierto se identifica explícitamente.
+- Seleccionar **Ver jornada** guarda una referencia temporal separada como jornada consultada; nunca reemplaza la jornada actual.
+- Los animales históricos se cargan únicamente con `listAnimalsByJourney(journeyId)`.
+- El resumen reutiliza `calculateJourneyStatistics` sobre esos animales y no persiste resultados derivados.
+- El listado histórico reutiliza búsqueda e identificación, pero activa obligatoriamente el modo de solo lectura, sin editar, eliminar ni guardar.
+- La navegación explícita permite volver al resumen, al historial y a la jornada actual sin depender del historial del navegador.
+- Una base sin jornadas se representa con el mensaje **No hay jornadas registradas.**
+
+### Consecuencias y límites
+
+Consultar el historial solo realiza lecturas: no cierra jornadas, no modifica estados, no crea registros y no reasigna animales. La jornada actual permanece en memoria con su propio conjunto de animales mientras la jornada consultada y sus animales viven en estados de interfaz separados.
+
+La solución reutiliza el esquema IndexedDB existente, por lo que funciona con las jornadas ya almacenadas y no requiere migración ni limpieza local. Se agregaron pruebas de orden, metadatos, cantidades, ausencia de mutaciones, aislamiento por `journeyId`, resumen por jornada, estado vacío y renderizado de solo lectura.
+
+El 08/09/2026, el usuario validó manualmente la funcionalidad mediante una prueba controlada. El historial mostró Manga Oro Monte del 08/09/2026, cerrada y con 3 animales, antes de Manga Casco del 07/09/2026, cerrada y con 10 animales. Se verificaron los metadatos, el orden descendente, las acciones de consulta y regreso, y que ambas jornadas continuaran almacenadas.
+
+El detalle de Manga Oro Monte mostró **Jornada consultada · Cerrada**, total 3, preñadas 0 —0,0%—, vacías 3 —100,0%—, todas las categorías de preñez en 0 —0,0%—, Sin Diente 0 —0,0%— y Diente Cuarto 1 —33,3%—, sin errores matemáticos. Su listado contenía únicamente AI892 PU50/Naranja 1234, AI892 PU51/Naranja 1235 y AI892 PU52/Naranja 1236, los tres con diagnóstico Vacía.
+
+La prueba confirmó búsqueda disponible, modo de solo lectura sin editar, eliminar ni guardar, regreso al resumen y a la jornada actual, y aislamiento entre los 10 animales de Manga Casco y los 3 de Manga Oro Monte. Consultar el historial no eliminó, modificó ni reemplazó jornadas; cada animal permaneció asociado a su `journeyId` y los resúmenes se reconstruyeron sin persistir estadísticas duplicadas.
+
+Esta evidencia corresponde a una prueba controlada y no a condiciones reales de campo. Continúan fuera de esta etapa la reapertura, edición histórica, eliminación de jornadas, XLSX, respaldo, agente y nuevas estadísticas.
+
 ## Decisiones que continúan pendientes
 
 - contrato mínimo, herramientas y límites del agente;

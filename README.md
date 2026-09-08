@@ -64,7 +64,7 @@ El repositorio público es [pireseber-lang/TF-Agente-Diagnostico-Prenez](https:/
 
 ## Estado actual
 
-**Los incrementos de carga, persistencia, consulta, navegación, control de posibles duplicados, caravana con número opcional, cierre, resumen estadístico y creación de una nueva jornada independiente están implementados y validados manualmente en pruebas controladas.**
+**Los incrementos de carga, persistencia, consulta, navegación, control de posibles duplicados, caravana con número opcional, cierre, resumen estadístico, creación de una nueva jornada independiente e historial están implementados y validados manualmente en pruebas controladas.**
 
 ### Implementado
 
@@ -99,6 +99,9 @@ El repositorio público es [pireseber-lang/TF-Agente-Diagnostico-Prenez](https:/
 - bloqueo de nuevas altas y consulta de animales en modo de solo lectura después del cierre;
 - creación de una jornada abierta e independiente después de cerrar la anterior, sin borrar ni modificar datos previos;
 - recuperación prioritaria de la jornada abierta y aislamiento de animales mediante `journeyId`;
+- historial local ordenado desde la jornada más reciente, con fecha, lugar, estado y cantidad de animales;
+- consulta temporal de resúmenes y animales históricos sin reemplazar la jornada actual;
+- búsqueda y listado en modo de solo lectura para las jornadas consultadas;
 - resumen reproductivo y de boqueo calculado localmente desde los animales, sin guardar estadísticas duplicadas;
 - porcentajes con un decimal y denominadores diferenciados para el resultado general y la distribución interna de preñadas;
 - pruebas unitarias y de integración de las reglas y los repositorios incorporados.
@@ -106,7 +109,8 @@ El repositorio público es [pireseber-lang/TF-Agente-Diagnostico-Prenez](https:/
 ### Pendiente de implementación o validación
 
 - reapertura de jornadas cerradas;
-- historial general de jornadas cerradas, próxima funcionalidad prevista;
+- edición de jornadas cerradas;
+- eliminación de jornadas;
 - exportación XLSX y respaldo JSON;
 - chequeo de preparación offline;
 - componente agéntico;
@@ -207,7 +211,27 @@ También se verificó que la segunda jornada quedara cerrada, que sus tres anima
 
 La prueba no se realizó en condiciones reales de campo. La jornada anterior continúa almacenada en IndexedDB, con sus animales asociados al `journeyId` original; crear otra jornada no implica pérdida de información. La interfaz muestra la jornada abierta o, si no existe, la más reciente, pero todavía no permite navegar hacia jornadas históricas anteriores.
 
-La próxima funcionalidad prevista es **Historial de jornadas**, cuyo objetivo será consultar desde la interfaz las jornadas anteriores, sus resúmenes y sus animales. No se implementó en esta etapa. Tampoco se incorporaron reapertura, XLSX, respaldo ni componente agéntico.
+La siguiente etapa implementó **Historial de jornadas** para consultar desde la interfaz las jornadas anteriores, sus resúmenes y sus animales. Continúan pendientes la reapertura, eliminación de jornadas, XLSX, respaldo y componente agéntico.
+
+### Historial de jornadas validado manualmente
+
+La acción **Historial de jornadas** abre una pantalla de consulta que lista todas las jornadas persistidas, ordenadas por `createdAt` desde la más reciente. Cada fila muestra fecha, lugar, estado y cantidad de animales, sin desplegar todavía sus registros.
+
+La jornada actual y la jornada consultada se mantienen como estados separados. Entrar al historial, seleccionar una jornada o regresar no cierra, reemplaza ni modifica la jornada actual. Los animales consultados se leen exclusivamente mediante el `journeyId` histórico y los resúmenes se recalculan con las funciones estadísticas existentes; no se almacenan copias de estadísticas.
+
+El detalle permite consultar el resumen y buscar dentro del listado de animales. Toda jornada abierta o cerrada consultada desde el historial se presenta en modo de solo lectura. No aparecen acciones de edición, eliminación o guardado. La navegación principal ofrece **Volver al historial** y **Volver a jornada actual** sin depender del botón Atrás del navegador.
+
+Si IndexedDB no contiene jornadas, la pantalla muestra **No hay jornadas registradas.** La implementación utiliza el esquema actual y no exige borrar datos ni ejecutar una migración.
+
+El 08/09/2026, el usuario validó manualmente el historial mediante una prueba controlada. La pantalla mostró primero Manga Oro Monte del 08/09/2026, cerrada y con 3 animales, y luego Manga Casco del 07/09/2026, cerrada y con 10 animales. Comprobó fecha, lugar, estado, cantidad, orden descendente, **Ver jornada** y **Volver a jornada actual**, así como la conservación de ambas jornadas.
+
+Al consultar Manga Oro Monte, la aplicación mostró **Jornada consultada · Cerrada**, la fecha, lugar y total de 3 vacas. El resumen reconstruido presentó preñadas 0 —0,0%—, vacías 3 —100,0%—, las cuatro categorías de preñez en 0 —0,0%—, Sin Diente 0 —0,0%— y Diente Cuarto 1 —33,3%—, sin `NaN`, infinito ni errores matemáticos.
+
+El listado mostró exclusivamente AI892 PU50 con Naranja 1234, AI892 PU51 con Naranja 1235 y AI892 PU52 con Naranja 1236, todos con diagnóstico Vacía. La búsqueda permaneció disponible y no aparecieron acciones de edición, eliminación o guardado. También funcionaron **Volver al resumen** y **Volver a jornada actual**.
+
+Mediante el historial se comprobó además que Manga Casco conserva sus 10 animales, Manga Oro Monte conserva sus 3 animales y que no se mezclan ni modifican datos entre jornadas. Cada animal continúa asociado a su `journeyId`; los resúmenes se calculan desde esos registros y las estadísticas no se duplican en IndexedDB. Consultar una jornada no reemplaza la jornada actual.
+
+Esta evidencia corresponde a una prueba controlada, no a condiciones reales de campo. Todavía no se implementaron reapertura, edición histórica, eliminación de jornadas, XLSX, respaldo ni componente agéntico.
 
 ## Ejecutar localmente
 

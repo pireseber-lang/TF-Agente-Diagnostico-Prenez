@@ -1,5 +1,5 @@
 import type { Place } from '../../../domain/catalogs'
-import type { Journey } from '../../../domain/models'
+import type { Journey, JourneyHistoryItem } from '../../../domain/models'
 import { getDatabase } from '../database'
 
 export async function createJourney(
@@ -59,6 +59,28 @@ export async function getLatestJourney(): Promise<Journey | undefined> {
 
 export async function getCurrentJourney(): Promise<Journey | undefined> {
   return (await getActiveJourney()) ?? (await getLatestJourney())
+}
+
+export async function listJourneyHistory(): Promise<JourneyHistoryItem[]> {
+  const database = await getDatabase()
+  const journeys = await database.getAllFromIndex(
+    'journeys',
+    'by-created-at',
+  )
+  const sortedJourneys = [...journeys].sort((left, right) =>
+    right.createdAt.localeCompare(left.createdAt),
+  )
+
+  return Promise.all(
+    sortedJourneys.map(async (journey) => ({
+      journey,
+      animalCount: await database.countFromIndex(
+        'animals',
+        'by-journey-id',
+        journey.id,
+      ),
+    })),
+  )
 }
 
 export async function closeJourney(
