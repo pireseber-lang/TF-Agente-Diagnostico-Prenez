@@ -133,4 +133,28 @@ describe('animalWorkspaceReducer', () => {
     expect(result.animals[1]).toEqual(duplicateAnimal)
     expect(result.pendingDuplicateReview).toBeUndefined()
   })
+
+  it('no abre la revisión de cierre si la jornada no tiene animales', () => {
+    const state = { animals: [], screen: 'entry' as const }
+    const result = animalWorkspaceReducer(state, { type: 'closingStarted' })
+
+    expect(result).toBe(state)
+    expect(result.screen).toBe('entry')
+  })
+
+  it('abre la revisión de cierre cuando existe al menos un animal', () => {
+    const state = { animals: [animal], screen: 'entry' as const }
+    const result = animalWorkspaceReducer(state, { type: 'closingStarted' })
+
+    expect(result.screen).toBe('closing')
+    expect(result.animals).toBe(state.animals)
+  })
+
+  it('al cerrar vuelve a la pantalla principal sin alterar animales', () => {
+    const state = { animals: [animal], screen: 'closing' as const }
+    const result = animalWorkspaceReducer(state, { type: 'journeyClosed' })
+
+    expect(result.screen).toBe('entry')
+    expect(result.animals).toBe(state.animals)
+  })
 })

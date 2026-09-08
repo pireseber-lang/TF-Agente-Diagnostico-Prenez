@@ -517,6 +517,48 @@ El 07/09/2026, el usuario informó haber validado manualmente que:
 
 Con esta evidencia declarada por el usuario se considera validada manualmente la corrección. Esto no equivale todavía a una validación en campo, sin conexión o en un celular Android real. La corrección no incorpora funcionalidades nuevas ni modifica el control humano de duplicados.
 
+## DEC-019 — Cierre explícito y resumen determinístico de jornada
+
+- **Fecha:** 2026-09-08
+- **Estado:** Implementado y validado manualmente en prueba controlada
+
+### Contexto
+
+El final de una jornada necesita convertir una colección editable de registros en un resultado final consultable. Ese cambio debe ser consciente, trazable y seguro: no puede cerrar una jornada vacía, ignorar los duplicados conservados mediante revisión humana ni depender de cálculos opacos o de conectividad.
+
+### Decisión
+
+- La jornada usa los estados persistentes `open` y `closed` y guarda `closedAt` al confirmar el cierre.
+- Una jornada vacía no puede cerrarse.
+- Antes del cierre se muestran fecha, lugar, total de animales y cantidad de registros con evidencia de revisión por duplicados.
+- Si existen duplicados conservados, se muestra su detalle y se exige una confirmación específica de que fueron revisados. Esto no modifica, fusiona ni elimina ningún registro.
+- El botón **Confirmar cierre de jornada** realiza el cambio final de estado bajo control humano.
+- Una jornada cerrada no admite nuevas altas y su listado se presenta en modo de consulta. La reapertura no se incorpora en esta etapa.
+- IndexedDB conserva la jornada, `closedAt`, los animales y sus revisiones. Las estadísticas no se persisten: se reconstruyen desde los animales para evitar divergencias.
+
+### Fórmulas determinísticas
+
+- Preñadas = Cabeza + Cuerpo + Cola + Robo.
+- Porcentaje de preñez = `preñadas / total de vacas × 100`.
+- Porcentaje de vacías = `vacías / total de vacas × 100`.
+- Porcentaje de cada categoría de preñez = `cantidad de la categoría / total de preñadas × 100`.
+- Porcentaje Sin Diente = `Sin Diente / total de vacas × 100`.
+- Porcentaje Diente Cuarto = `Diente Cuarto / total de vacas × 100`.
+
+Los resultados se redondean a un decimal. Cuando el denominador es cero, el porcentaje es `0,0%`; nunca se muestra `NaN` ni infinito. Deben cumplirse las invariantes **preñadas + vacías = total** y **Cabeza + Cuerpo + Cola + Robo = preñadas**. Las funciones son puras y no modifican los animales originales.
+
+### Interpretación y límites
+
+**Sin Diente** se informa como candidata a salida actual del rodeo por edad. **Diente Cuarto** se informa como animal a seguir especialmente y candidato a salida el año siguiente. Estas son ayudas operativas: el sistema no determina descartes ni reemplaza decisiones humanas.
+
+La implementación incluye pruebas de estado, persistencia, bloqueo de altas, cálculo, casos cero, invariantes y no mutación.
+
+El 08/09/2026, el usuario realizó una prueba manual controlada con 10 vacas: 4 Cabeza, 2 Cuerpo, 1 Cola, 1 Robo y 2 Vacías; 2 animales Sin Diente y 3 Diente Cuarto. El sistema presentó correctamente 8 preñadas —80,0%—, 2 vacías —20,0%—, y la distribución interna Cabeza 50,0%, Cuerpo 25,0%, Cola 12,5% y Robo 12,5%. También mostró Sin Diente 20,0% y Diente Cuarto 30,0%, ambos sobre el total de animales.
+
+En la misma prueba se verificó el cambio al estado cerrado, la pantalla **Jornada finalizada**, el resumen, la consulta del listado en modo de solo lectura sin editar ni eliminar, el regreso al resumen y la conservación de los animales después del cierre.
+
+Esta validación fue controlada: no se presenta como una prueba en condiciones reales de campo ni durante un trabajo real de manga. Queda pendiente una prueba manual específica con cero vacas preñadas, aunque el caso está cubierto por pruebas automáticas. Esta etapa no incorpora reapertura, inicio de una nueva jornada después del cierre, historial general, XLSX, respaldo JSON ni componente agéntico.
+
 ## Decisiones que continúan pendientes
 
 - contrato mínimo, herramientas y límites del agente;

@@ -22,6 +22,14 @@ const baseData: ValidatedAnimalData = {
 beforeEach(async () => {
   const database = await getDatabase()
   await database.clear('animals')
+  await database.clear('journeys')
+  await database.add('journeys', {
+    id: 'journey-1',
+    date: '2026-09-08',
+    place: 'Manga Casco',
+    status: 'open',
+    createdAt: '2026-09-08T09:00:00.000Z',
+  })
 })
 
 describe('animalRepository', () => {

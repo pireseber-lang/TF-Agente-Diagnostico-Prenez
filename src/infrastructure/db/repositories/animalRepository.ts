@@ -24,8 +24,19 @@ export async function addAnimal(
   duplicateReview?: DuplicateReviewEvidence,
 ): Promise<Animal> {
   const database = await getDatabase()
-  const transaction = database.transaction('animals', 'readwrite')
-  const existingAnimals = await transaction.store
+  const transaction = database.transaction(
+    ['journeys', 'animals'],
+    'readwrite',
+  )
+  const journey = await transaction.objectStore('journeys').get(journeyId)
+
+  if (!journey) throw new Error('Journey not found')
+  if (journey.status === 'closed') {
+    throw new Error('Cannot add animals to a closed journey')
+  }
+
+  const animalStore = transaction.objectStore('animals')
+  const existingAnimals = await animalStore
     .index('by-journey-id')
     .getAll(journeyId)
   const nextSequence =
@@ -43,7 +54,7 @@ export async function addAnimal(
     ...(duplicateReview ? { duplicateReviews: [duplicateReview] } : {}),
   }
 
-  await transaction.store.add(animal)
+  await animalStore.add(animal)
   await transaction.done
   return animal
 }

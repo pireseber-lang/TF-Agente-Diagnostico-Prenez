@@ -1,9 +1,9 @@
 # Especificación funcional V1
 
 - **Proyecto:** Diagnóstico de preñez en manga
-- **Versión del documento:** 0.3
-- **Fecha:** 2026-09-06
-- **Estado:** Definiciones funcionales y arquitectura tecnológica V1 aprobadas; implementación pendiente
+- **Versión del documento:** 0.4
+- **Fecha:** 2026-09-08
+- **Estado:** Definiciones funcionales y arquitectura aprobadas; implementación incremental en curso
 
 ## 1. Propósito
 
@@ -146,6 +146,7 @@ El usuario puede:
 | Fecha | Fecha | Sí | Formato visible `DD/MM/AAAA` |
 | Lugar | Opción única | Sí | Manga Casco, Manga Complejo o Manga Oro Monte |
 | Estado | Estado del sistema | Sí | Abierta o cerrada |
+| Fecha/hora de cierre | Fecha y hora del sistema | Solo al cerrar | Se persiste al confirmar el cierre |
 
 ### 6.2 Datos de cada animal
 
@@ -291,6 +292,15 @@ Definiciones:
 - **Presentación:** todos los porcentajes se muestran con un decimal.
 
 Si no hay vacas preñadas, los porcentajes de Preñada Cabeza, Preñada Cuerpo, Preñada Cola y Preñada Robo se muestran como `0,0%`.
+
+El resumen de boqueo agrega:
+
+- **Sin Diente:** cantidad y porcentaje sobre el total de vacas. Se informa como candidatas a salida actual del rodeo por edad.
+- **Diente Cuarto:** cantidad y porcentaje sobre el total de vacas. Se informa como animales a seguir especialmente y candidatos a salida el año siguiente.
+
+El sistema presenta estas interpretaciones como información operativa y no decide descartes. Para ambas categorías, un conteo cero se muestra como `0 — 0,0%`.
+
+La implementación actual persiste solamente el estado y la fecha/hora de cierre; el resumen se reconstruye mediante funciones puras a partir de los animales conservados. La jornada cerrada impide nuevas altas y permite consultar su listado en modo de solo lectura. El historial general, la reapertura y la exportación XLSX todavía no están implementados. El cierre y el resumen están pendientes de validación manual del usuario y no se presentan como validados en campo.
 
 ## 10. Exportación Excel
 

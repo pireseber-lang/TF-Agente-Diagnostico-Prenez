@@ -19,15 +19,51 @@ export async function createJourney(
   return journey
 }
 
-export async function getActiveJourney(): Promise<Journey | undefined> {
+export async function getLatestJourney(): Promise<Journey | undefined> {
   const database = await getDatabase()
-  const openJourneys = await database.getAllFromIndex(
+  const journeys = await database.getAllFromIndex(
     'journeys',
-    'by-status',
-    'open',
+    'by-created-at',
   )
 
-  return openJourneys.sort((left, right) =>
+  return journeys.sort((left, right) =>
     right.createdAt.localeCompare(left.createdAt),
   )[0]
+}
+
+export async function closeJourney(
+  journeyId: string,
+  closedAt = new Date().toISOString(),
+): Promise<Journey> {
+  const database = await getDatabase()
+  const transaction = database.transaction(
+    ['journeys', 'animals'],
+    'readwrite',
+  )
+  const journey = await transaction.objectStore('journeys').get(journeyId)
+
+  if (!journey) throw new Error('Journey not found')
+  if (journey.status === 'closed') {
+    await transaction.done
+    return journey
+  }
+
+  const animalCount = await transaction
+    .objectStore('animals')
+    .index('by-journey-id')
+    .count(journeyId)
+
+  if (animalCount === 0) {
+    throw new Error('Cannot close an empty journey')
+  }
+
+  const closedJourney: Journey = {
+    ...journey,
+    status: 'closed',
+    closedAt,
+  }
+
+  await transaction.objectStore('journeys').put(closedJourney)
+  await transaction.done
+  return closedJourney
 }

@@ -6,9 +6,11 @@ import type { Animal } from '../../domain/models'
 interface AnimalListProps {
   animals: Animal[]
   deletingAnimalId?: string
-  onEdit: (animal: Animal) => void
-  onDelete: (animal: Animal) => void
+  onEdit?: (animal: Animal) => void
+  onDelete?: (animal: Animal) => void
   onBack: () => void
+  backLabel?: string
+  readOnly?: boolean
 }
 
 function displayBodyCondition(value: number): string {
@@ -21,6 +23,8 @@ export function AnimalList({
   onEdit,
   onDelete,
   onBack,
+  backLabel = 'Volver a carga',
+  readOnly = false,
 }: AnimalListProps) {
   const [query, setQuery] = useState('')
   const filteredAnimals = filterAnimalsBySearch(animals, query)
@@ -39,7 +43,7 @@ export function AnimalList({
           onClick={onBack}
           type="button"
         >
-          Volver a carga
+          {backLabel}
         </button>
       </div>
 
@@ -81,23 +85,25 @@ export function AnimalList({
                 <span>{animal.dentition}</span>
                 <span>CC {displayBodyCondition(animal.bodyCondition)}</span>
               </div>
-              <div className="animal-actions">
-                <button
-                  className="secondary-button compact-button"
-                  onClick={() => onEdit(animal)}
-                  type="button"
-                >
-                  Editar
-                </button>
-                <button
-                  className="danger-button compact-button"
-                  disabled={deletingAnimalId === animal.id}
-                  onClick={() => onDelete(animal)}
-                  type="button"
-                >
-                  {deletingAnimalId === animal.id ? 'Eliminando…' : 'Eliminar'}
-                </button>
-              </div>
+              {!readOnly && onEdit && onDelete && (
+                <div className="animal-actions">
+                  <button
+                    className="secondary-button compact-button"
+                    onClick={() => onEdit(animal)}
+                    type="button"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    className="danger-button compact-button"
+                    disabled={deletingAnimalId === animal.id}
+                    onClick={() => onDelete(animal)}
+                    type="button"
+                  >
+                    {deletingAnimalId === animal.id ? 'Eliminando…' : 'Eliminar'}
+                  </button>
+                </div>
+              )}
             </li>
           ))}
         </ol>

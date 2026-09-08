@@ -13,6 +13,8 @@ import {
   animalWorkspaceReducer,
   initialAnimalWorkspaceState,
 } from '../features/animals/animalWorkspace'
+import { CloseJourneyReview } from '../features/journeys/CloseJourneyReview'
+import { ClosedJourneySummary } from '../features/journeys/ClosedJourneySummary'
 import { NewJourneyForm } from '../features/journeys/NewJourneyForm'
 import {
   addAnimal,
@@ -21,8 +23,9 @@ import {
   updateAnimal,
 } from '../infrastructure/db/repositories/animalRepository'
 import {
+  closeJourney,
   createJourney,
-  getActiveJourney,
+  getLatestJourney,
 } from '../infrastructure/db/repositories/journeyRepository'
 
 export function App() {
@@ -45,7 +48,7 @@ export function App() {
 
     async function loadPersistedData() {
       try {
-        const persistedJourney = await getActiveJourney()
+        const persistedJourney = await getLatestJourney()
         if (!active || !persistedJourney) return
         const persistedAnimals = await listAnimalsByJourney(
           persistedJourney.id,
@@ -78,7 +81,7 @@ export function App() {
   async function handleSaveAnimal(
     data: ValidatedAnimalData,
   ): Promise<boolean> {
-    if (!journey) return false
+    if (!journey || journey.status === 'closed') return false
     const matches = findDuplicateMatches(data, workspace.animals)
     if (matches.length > 0) {
       dispatch({
@@ -153,11 +156,42 @@ export function App() {
   }
 
   function handleShowAnimals() {
+    setOperationError('')
     dispatch({ type: 'animalsShown' })
   }
 
   function handleShowEntry() {
+    setOperationError('')
     dispatch({ type: 'entryShown' })
+  }
+
+  function handleStartClosing() {
+    setOperationError('')
+    if (workspace.animals.length === 0) {
+      setOperationError('No se puede cerrar una jornada sin animales.')
+      return
+    }
+
+    dispatch({ type: 'closingStarted' })
+  }
+
+  function handleCancelClosing() {
+    setOperationError('')
+    dispatch({ type: 'closingCanceled' })
+  }
+
+  async function handleCloseJourney() {
+    if (!journey) return
+    setOperationError('')
+    try {
+      const closedJourney = await closeJourney(journey.id)
+      setJourney(closedJourney)
+      dispatch({ type: 'journeyClosed' })
+    } catch {
+      setOperationError(
+        'No se pudo cerrar la jornada. Revisá los datos e intentá nuevamente.',
+      )
+    }
   }
 
   async function handleDeleteAnimal(animal: Animal) {
@@ -207,13 +241,35 @@ export function App() {
         <>
           <section className="journey-summary card">
             <div>
-              <span className="eyebrow">Jornada abierta</span>
+              <span className="eyebrow">
+                Jornada {journey.status === 'closed' ? 'cerrada' : 'abierta'}
+              </span>
               <h2>{journey.place}</h2>
             </div>
             <time dateTime={journey.date}>{formatLocalDate(journey.date)}</time>
           </section>
 
-          {workspace.screen === 'animals' ? (
+          {journey.status === 'closed' && workspace.screen === 'animals' ? (
+            <AnimalList
+              animals={workspace.animals}
+              backLabel="Volver al resumen"
+              onBack={handleShowEntry}
+              readOnly
+            />
+          ) : journey.status === 'closed' ? (
+            <ClosedJourneySummary
+              animals={workspace.animals}
+              journey={journey}
+              onViewAnimals={handleShowAnimals}
+            />
+          ) : workspace.screen === 'closing' ? (
+            <CloseJourneyReview
+              animals={workspace.animals}
+              journey={journey}
+              onCancel={handleCancelClosing}
+              onConfirm={handleCloseJourney}
+            />
+          ) : workspace.screen === 'animals' ? (
             <AnimalList
               animals={workspace.animals}
               deletingAnimalId={deletingAnimalId}
@@ -241,6 +297,15 @@ export function App() {
                   <small className="editing-navigation-hint">
                     Guardá o cancelá la edición para volver al listado.
                   </small>
+                )}
+                {!editingAnimal && (
+                  <button
+                    className="secondary-button close-journey-button"
+                    onClick={handleStartClosing}
+                    type="button"
+                  >
+                    Cerrar jornada
+                  </button>
                 )}
               </section>
               <AnimalForm

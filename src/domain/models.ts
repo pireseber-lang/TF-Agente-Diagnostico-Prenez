@@ -10,8 +10,9 @@ export interface Journey {
   id: string
   date: string
   place: Place
-  status: 'open'
+  status: 'open' | 'closed'
   createdAt: string
+  closedAt?: string
 }
 
 export interface Animal {

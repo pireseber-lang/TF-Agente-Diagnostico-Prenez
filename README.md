@@ -64,7 +64,7 @@ El repositorio público es [pireseber-lang/TF-Agente-Diagnostico-Prenez](https:/
 
 ## Estado actual
 
-**Los incrementos de carga, persistencia, consulta, navegación, control de posibles duplicados y caravana con número opcional están implementados y validados manualmente.**
+**Los incrementos de carga, persistencia, consulta, navegación, control de posibles duplicados, caravana con número opcional, cierre y resumen estadístico están implementados y validados manualmente en pruebas controladas.**
 
 ### Implementado
 
@@ -94,11 +94,18 @@ El repositorio público es [pireseber-lang/TF-Agente-Diagnostico-Prenez](https:/
 - decisión humana entre **Cancelar** y **Guardar de todos modos**, sin eliminar, fusionar ni modificar registros automáticamente;
 - exclusión del propio animal durante la edición y control contra los demás registros;
 - evidencia persistente cuando el usuario decide conservar un posible duplicado;
+- cierre explícito de una jornada no vacía mediante una revisión previa y confirmación humana;
+- persistencia del estado cerrado y de la fecha/hora de cierre en IndexedDB;
+- bloqueo de nuevas altas y consulta de animales en modo de solo lectura después del cierre;
+- resumen reproductivo y de boqueo calculado localmente desde los animales, sin guardar estadísticas duplicadas;
+- porcentajes con un decimal y denominadores diferenciados para el resultado general y la distribución interna de preñadas;
 - pruebas unitarias y de integración de las reglas y los repositorios incorporados.
 
 ### Pendiente de implementación o validación
 
-- cierre, estadísticas e historial de jornadas cerradas;
+- prueba manual específica del resumen con cero vacas preñadas;
+- inicio de una nueva jornada después de cerrar la anterior y reapertura de jornadas cerradas;
+- historial general de jornadas cerradas;
 - exportación XLSX y respaldo JSON;
 - chequeo de preparación offline;
 - componente agéntico;
@@ -156,6 +163,32 @@ Compartir únicamente el color no genera una alerta fuerte de duplicado, porque 
 El 07/09/2026, el usuario informó haber validado manualmente la carga de color sin número y de color con número, su presentación correcta en el listado y el funcionamiento normal de la identificación oficial. También comprobó que compartir solamente el color sin una numeración completa coincidente no genera una advertencia fuerte y que la coincidencia completa de color y número sí mantiene el control de posible duplicado.
 
 Esta evidencia valida la corrección en la aplicación utilizada por el usuario, pero no equivale todavía a una prueba en campo, sin conexión o en un celular Android real.
+
+### Cierre de jornada y resumen estadístico validados manualmente
+
+Una jornada abierta ahora ofrece la acción **Cerrar jornada**. El sistema impide cerrar si no hay animales y, cuando los hay, muestra una revisión previa con fecha, lugar, total y cantidad de registros conservados después de una revisión humana por duplicados. Si existen esos registros, el usuario debe revisarlos y marcar una confirmación específica antes del cierre definitivo. El sistema no corrige ni elimina datos automáticamente.
+
+La confirmación guarda únicamente el estado cerrado y la fecha/hora de cierre. Los animales y sus evidencias de revisión permanecen en IndexedDB; el resumen se reconstruye de forma determinística a partir de esos registros. La jornada cerrada no admite nuevas altas y el listado queda disponible en modo de consulta.
+
+El porcentaje general de preñez y el de vacías usan como denominador el total de vacas. En cambio, Cabeza, Cuerpo, Cola y Robo usan como denominador el total de preñadas. Si ese total es cero, las cuatro categorías muestran `0,0%`. **Sin Diente** y **Diente Cuarto** se calculan sobre el total de vacas: se informan respectivamente como candidatas a salida actual y como animales a seguir, candidatos a salida el año siguiente. La aplicación no decide descartes.
+
+Se incorporaron pruebas unitarias e integración para el cierre, la persistencia, el bloqueo de nuevas altas, las fórmulas, los casos cero, las invariantes y la no mutación de los registros.
+
+El 08/09/2026, el usuario validó manualmente esta funcionalidad en una prueba controlada con 10 vacas: 4 Preñada Cabeza, 2 Preñada Cuerpo, 1 Preñada Cola, 1 Preñada Robo y 2 Vacías; además, 2 animales Sin Diente y 3 Diente Cuarto. La aplicación mostró correctamente:
+
+- total: 10;
+- preñadas: 8 — 80,0%;
+- vacías: 2 — 20,0%;
+- Cabeza: 4 — 50,0% de las preñadas;
+- Cuerpo: 2 — 25,0% de las preñadas;
+- Cola: 1 — 12,5% de las preñadas;
+- Robo: 1 — 12,5% de las preñadas;
+- Sin Diente: 2 — 20,0% del total;
+- Diente Cuarto: 3 — 30,0% del total.
+
+También comprobó el cambio al estado cerrado, la presentación **Jornada finalizada**, la consulta de animales en modo de solo lectura sin acciones de edición o eliminación, el regreso al resumen y la conservación de los animales después del cierre.
+
+Esta fue una prueba controlada y no una validación en condiciones reales de campo o durante un trabajo real de manga. Sigue pendiente una prueba manual específica con cero vacas preñadas, aunque ese caso está cubierto por pruebas automáticas. Tampoco están implementados la reapertura, el inicio de una nueva jornada después del cierre, el historial general ni la exportación XLSX.
 
 ## Ejecutar localmente
 
