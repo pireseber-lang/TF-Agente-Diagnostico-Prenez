@@ -157,4 +157,19 @@ describe('animalWorkspaceReducer', () => {
     expect(result.screen).toBe('entry')
     expect(result.animals).toBe(state.animals)
   })
+
+  it('una jornada cerrada permite iniciar y cancelar el flujo de nueva jornada', () => {
+    const closedState = { animals: [animal], screen: 'entry' as const }
+    const creatingState = animalWorkspaceReducer(closedState, {
+      type: 'newJourneyStarted',
+    })
+    const canceledState = animalWorkspaceReducer(creatingState, {
+      type: 'newJourneyCanceled',
+    })
+
+    expect(creatingState.screen).toBe('new-journey')
+    expect(creatingState.animals).toBe(closedState.animals)
+    expect(canceledState.screen).toBe('entry')
+    expect(canceledState.animals).toBe(closedState.animals)
+  })
 })

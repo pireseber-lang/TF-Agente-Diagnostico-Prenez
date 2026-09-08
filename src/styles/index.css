@@ -372,6 +372,17 @@ textarea {
   font-size: 1.15rem;
 }
 
+.closed-summary-actions,
+.new-journey-actions {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.new-journey-button {
+  width: 100%;
+  min-height: 58px;
+}
+
 .statistics-card h3 {
   margin-bottom: 0.25rem;
 }
@@ -742,6 +753,11 @@ textarea {
   }
 
   .closing-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .closed-summary-actions,
+  .new-journey-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

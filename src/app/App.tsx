@@ -25,7 +25,7 @@ import {
 import {
   closeJourney,
   createJourney,
-  getLatestJourney,
+  getCurrentJourney,
 } from '../infrastructure/db/repositories/journeyRepository'
 
 export function App() {
@@ -48,7 +48,7 @@ export function App() {
 
     async function loadPersistedData() {
       try {
-        const persistedJourney = await getLatestJourney()
+        const persistedJourney = await getCurrentJourney()
         if (!active || !persistedJourney) return
         const persistedAnimals = await listAnimalsByJourney(
           persistedJourney.id,
@@ -165,6 +165,16 @@ export function App() {
     dispatch({ type: 'entryShown' })
   }
 
+  function handleStartNewJourney() {
+    setOperationError('')
+    dispatch({ type: 'newJourneyStarted' })
+  }
+
+  function handleCancelNewJourney() {
+    setOperationError('')
+    dispatch({ type: 'newJourneyCanceled' })
+  }
+
   function handleStartClosing() {
     setOperationError('')
     if (workspace.animals.length === 0) {
@@ -239,17 +249,26 @@ export function App() {
         <NewJourneyForm onCreate={handleCreateJourney} />
       ) : (
         <>
-          <section className="journey-summary card">
-            <div>
-              <span className="eyebrow">
-                Jornada {journey.status === 'closed' ? 'cerrada' : 'abierta'}
-              </span>
-              <h2>{journey.place}</h2>
-            </div>
-            <time dateTime={journey.date}>{formatLocalDate(journey.date)}</time>
-          </section>
+          {workspace.screen !== 'new-journey' && (
+            <section className="journey-summary card">
+              <div>
+                <span className="eyebrow">
+                  Jornada {journey.status === 'closed' ? 'cerrada' : 'abierta'}
+                </span>
+                <h2>{journey.place}</h2>
+              </div>
+              <time dateTime={journey.date}>{formatLocalDate(journey.date)}</time>
+            </section>
+          )}
 
-          {journey.status === 'closed' && workspace.screen === 'animals' ? (
+          {journey.status === 'closed' &&
+          workspace.screen === 'new-journey' ? (
+            <NewJourneyForm
+              initiallyOpen
+              onCancel={handleCancelNewJourney}
+              onCreate={handleCreateJourney}
+            />
+          ) : journey.status === 'closed' && workspace.screen === 'animals' ? (
             <AnimalList
               animals={workspace.animals}
               backLabel="Volver al resumen"
@@ -260,6 +279,7 @@ export function App() {
             <ClosedJourneySummary
               animals={workspace.animals}
               journey={journey}
+              onNewJourney={handleStartNewJourney}
               onViewAnimals={handleShowAnimals}
             />
           ) : workspace.screen === 'closing' ? (

@@ -9,7 +9,7 @@ export interface PendingDuplicateReview {
 
 export interface AnimalWorkspaceState {
   animals: Animal[]
-  screen: 'entry' | 'animals' | 'closing'
+  screen: 'entry' | 'animals' | 'closing' | 'new-journey'
   editingAnimalId?: string
   pendingDuplicateReview?: PendingDuplicateReview
 }
@@ -27,6 +27,8 @@ export type AnimalWorkspaceAction =
   | { type: 'closingStarted' }
   | { type: 'closingCanceled' }
   | { type: 'journeyClosed' }
+  | { type: 'newJourneyStarted' }
+  | { type: 'newJourneyCanceled' }
   | { type: 'editingStarted'; animalId: string }
   | { type: 'editingCanceled' }
   | { type: 'duplicateReviewRequested'; review: PendingDuplicateReview }
@@ -72,9 +74,17 @@ export function animalWorkspaceReducer(
           }
     case 'closingCanceled':
     case 'journeyClosed':
+    case 'newJourneyCanceled':
       return {
         ...state,
         screen: 'entry',
+        editingAnimalId: undefined,
+        pendingDuplicateReview: undefined,
+      }
+    case 'newJourneyStarted':
+      return {
+        ...state,
+        screen: 'new-journey',
         editingAnimalId: undefined,
         pendingDuplicateReview: undefined,
       }

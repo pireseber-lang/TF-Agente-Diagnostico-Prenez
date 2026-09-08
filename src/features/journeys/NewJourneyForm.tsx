@@ -4,10 +4,16 @@ import { todayAsIsoDate } from '../../domain/normalization'
 
 interface NewJourneyFormProps {
   onCreate: (date: string, place: Place) => Promise<void>
+  initiallyOpen?: boolean
+  onCancel?: () => void
 }
 
-export function NewJourneyForm({ onCreate }: NewJourneyFormProps) {
-  const [showForm, setShowForm] = useState(false)
+export function NewJourneyForm({
+  onCreate,
+  initiallyOpen = false,
+  onCancel,
+}: NewJourneyFormProps) {
+  const [showForm, setShowForm] = useState(initiallyOpen)
   const [date, setDate] = useState(todayAsIsoDate)
   const [place, setPlace] = useState<Place | ''>('')
   const [error, setError] = useState('')
@@ -82,9 +88,21 @@ export function NewJourneyForm({ onCreate }: NewJourneyFormProps) {
         </select>
       </label>
 
-      <button className="primary-button" disabled={saving} type="submit">
-        {saving ? 'Guardando…' : 'Crear jornada'}
-      </button>
+      <div className="new-journey-actions">
+        {onCancel && (
+          <button
+            className="secondary-button"
+            disabled={saving}
+            onClick={onCancel}
+            type="button"
+          >
+            Cancelar
+          </button>
+        )}
+        <button className="primary-button" disabled={saving} type="submit">
+          {saving ? 'Guardando…' : 'Iniciar jornada'}
+        </button>
+      </div>
     </form>
   )
 }

@@ -53,11 +53,13 @@ El resultado final permanece bajo responsabilidad humana.
 Agrupa los registros capturados en una fecha y un lugar determinados.
 
 - **Abierta:** admite altas, búsquedas, ediciones, eliminaciones y revisión de alertas.
-- **Cerrada:** conserva sus datos y resumen en el historial local y admite consulta y nueva exportación. La edición posterior al cierre no forma parte de los requisitos confirmados de V1.
+- **Cerrada:** es inmutable desde la interfaz actual, conserva sus datos y resumen y admite consulta. Desde ella puede iniciarse una jornada nueva e independiente. La reapertura y la interfaz general de historial todavía no están implementadas.
 
 ### 4.2 Registro de animal
 
 Representa una vaca dentro de una jornada. Debe tener al menos un esquema de identificación completo: identificación oficial, caravana de color o ambos.
+
+Cada animal pertenece a una sola jornada mediante `journeyId`. Cambiar de jornada no reasigna, copia ni mezcla animales. Las búsquedas, duplicados y estadísticas reciben únicamente los registros asociados a la jornada correspondiente.
 
 ### 4.3 Caso para revisión
 
@@ -200,6 +202,7 @@ Reglas de identificación aprobadas:
 | RF-20 | Conservar las jornadas cerradas en el historial local hasta que el usuario las elimine manualmente. |
 | RF-21 | Exportar e importar un respaldo integral JSON versionado mediante confirmación humana. |
 | RF-22 | Mostrar un chequeo de preparación offline antes de utilizar el dispositivo en una jornada. |
+| RF-23 | Iniciar una jornada abierta e independiente después de cerrar la anterior, conservando intactos la jornada cerrada, sus animales y sus revisiones. |
 
 ## 8. Validaciones y comportamiento del agente
 
@@ -300,7 +303,11 @@ El resumen de boqueo agrega:
 
 El sistema presenta estas interpretaciones como información operativa y no decide descartes. Para ambas categorías, un conteo cero se muestra como `0 — 0,0%`.
 
-La implementación actual persiste solamente el estado y la fecha/hora de cierre; el resumen se reconstruye mediante funciones puras a partir de los animales conservados. La jornada cerrada impide nuevas altas y permite consultar su listado en modo de solo lectura. El historial general, la reapertura y la exportación XLSX todavía no están implementados. El cierre y el resumen están pendientes de validación manual del usuario y no se presentan como validados en campo.
+La implementación actual persiste solamente el estado y la fecha/hora de cierre; el resumen se reconstruye mediante funciones puras a partir de los animales conservados. La jornada cerrada impide nuevas altas y permite consultar su listado en modo de solo lectura. El cierre y el resumen fueron validados manualmente en una prueba controlada, no en campo.
+
+Desde una jornada cerrada puede iniciarse otra jornada independiente. La recuperación prioriza una jornada abierta y carga exclusivamente sus animales por `journeyId`; si no existe una abierta, muestra la jornada más reciente. Esta capacidad y el caso con cero vacas preñadas fueron validados manualmente en una prueba controlada, no en campo. La jornada anterior continúa almacenada aunque todavía no exista una interfaz para navegar hacia ella.
+
+La próxima funcionalidad prevista es el historial general para consultar jornadas anteriores, sus resúmenes y sus animales. La navegación histórica, la reapertura y la exportación XLSX todavía no están implementadas.
 
 ## 10. Exportación Excel
 

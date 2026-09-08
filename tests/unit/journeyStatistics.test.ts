@@ -85,6 +85,9 @@ describe('calculateJourneyStatistics', () => {
     const onlyEmpty = [animal('animal-7', 'Vacía', 'Diente lleno')]
     const result = calculateJourneyStatistics(onlyEmpty)
 
+    expect(result.pregnant).toEqual({ count: 0, percentage: 0 })
+    expect(result.empty).toEqual({ count: 1, percentage: 100 })
+    expect(formatPercentage(result.pregnant.percentage)).toBe('0,0%')
     expect(
       Object.values(result.pregnantBreakdown).map(
         (metric) => formatPercentage(metric.percentage),

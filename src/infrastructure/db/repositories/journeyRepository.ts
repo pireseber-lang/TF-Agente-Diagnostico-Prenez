@@ -15,8 +15,36 @@ export async function createJourney(
   }
 
   const database = await getDatabase()
-  await database.add('journeys', journey)
+  const transaction = database.transaction('journeys', 'readwrite')
+  const openJourneys = await transaction.store
+    .index('by-status')
+    .getAll('open')
+
+  if (openJourneys.length > 0) {
+    await transaction.done
+    throw new Error('An open journey already exists')
+  }
+
+  await transaction.store.add(journey)
+  await transaction.done
   return journey
+}
+
+function newestJourney(journeys: Journey[]): Journey | undefined {
+  return journeys.sort((left, right) =>
+    right.createdAt.localeCompare(left.createdAt),
+  )[0]
+}
+
+export async function getActiveJourney(): Promise<Journey | undefined> {
+  const database = await getDatabase()
+  const openJourneys = await database.getAllFromIndex(
+    'journeys',
+    'by-status',
+    'open',
+  )
+
+  return newestJourney(openJourneys)
 }
 
 export async function getLatestJourney(): Promise<Journey | undefined> {
@@ -26,9 +54,11 @@ export async function getLatestJourney(): Promise<Journey | undefined> {
     'by-created-at',
   )
 
-  return journeys.sort((left, right) =>
-    right.createdAt.localeCompare(left.createdAt),
-  )[0]
+  return newestJourney(journeys)
+}
+
+export async function getCurrentJourney(): Promise<Journey | undefined> {
+  return (await getActiveJourney()) ?? (await getLatestJourney())
 }
 
 export async function closeJourney(

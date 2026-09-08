@@ -9,6 +9,7 @@ interface ClosedJourneySummaryProps {
   journey: Journey
   animals: Animal[]
   onViewAnimals: () => void
+  onNewJourney: () => void
 }
 
 function Metric({ count, percentage }: { count: number; percentage: number }) {
@@ -23,6 +24,7 @@ export function ClosedJourneySummary({
   journey,
   animals,
   onViewAnimals,
+  onNewJourney,
 }: ClosedJourneySummaryProps) {
   const statistics = calculateJourneyStatistics(animals)
 
@@ -92,13 +94,22 @@ export function ClosedJourneySummary({
         </div>
       </section>
 
-      <button
-        className="primary-button view-animals-button"
-        onClick={onViewAnimals}
-        type="button"
-      >
-        Ver animales cargados
-      </button>
+      <div className="closed-summary-actions">
+        <button
+          className="primary-button view-animals-button"
+          onClick={onViewAnimals}
+          type="button"
+        >
+          Ver animales cargados
+        </button>
+        <button
+          className="secondary-button new-journey-button"
+          onClick={onNewJourney}
+          type="button"
+        >
+          Nueva jornada
+        </button>
+      </div>
     </section>
   )
 }

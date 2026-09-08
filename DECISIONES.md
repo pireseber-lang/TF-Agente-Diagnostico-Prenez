@@ -559,6 +559,40 @@ En la misma prueba se verificó el cambio al estado cerrado, la pantalla **Jorna
 
 Esta validación fue controlada: no se presenta como una prueba en condiciones reales de campo ni durante un trabajo real de manga. Queda pendiente una prueba manual específica con cero vacas preñadas, aunque el caso está cubierto por pruebas automáticas. Esta etapa no incorpora reapertura, inicio de una nueva jornada después del cierre, historial general, XLSX, respaldo JSON ni componente agéntico.
 
+## DEC-020 — Nueva jornada independiente después del cierre
+
+- **Fecha:** 2026-09-08
+- **Estado:** Implementado y validado manualmente en prueba controlada
+
+### Contexto
+
+Después de cerrar la primera jornada, la aplicación solo permitía consultar su resumen y sus animales. Para continuar el uso cotidiano debe poder comenzar otro trabajo sin borrar IndexedDB ni alterar la jornada finalizada, pero sin anticipar todavía una interfaz general de historial.
+
+### Decisión
+
+- La pantalla cerrada incorpora **Nueva jornada** junto con **Ver animales cargados**.
+- El formulario reutiliza las validaciones existentes de fecha y lugar y exige la acción explícita **Iniciar jornada**.
+- Solo se permite crear una jornada nueva cuando no existe otra abierta.
+- La nueva jornada recibe un ID propio, estado `open`, no contiene `closedAt` y comienza sin animales ni estadísticas persistidas.
+- La jornada anterior conserva exactamente su estado `closed`, su `closedAt`, sus animales y sus evidencias de revisión.
+- Cada animal mantiene un único `journeyId`; las consultas del repositorio recuperan animales por ese identificador.
+- Al reconstruir la aplicación se busca primero una jornada abierta. Si no existe, se presenta la jornada más reciente, que puede estar cerrada.
+- La creación y recuperación no requieren migración ni borrado de los datos IndexedDB existentes.
+
+### Aislamiento funcional
+
+La interfaz mantiene en memoria solamente los animales de la jornada seleccionada mediante `listAnimalsByJourney(journey.id)`. Altas, búsqueda, edición, eliminación, duplicados y estadísticas consumen esa colección aislada. Las reglas internas de duplicados no cambian: siguen comparando identificaciones completas, pero solo contra animales de la jornada activa. Una coincidencia almacenada en una jornada anterior no genera por sí sola una advertencia.
+
+Se agregaron pruebas de independencia de IDs, conservación de la jornada anterior, asociación de animales, recuperación de la jornada activa y aislamiento de búsqueda, duplicados y estadísticas. El caso sin vacas preñadas continúa cubierto automáticamente con porcentajes `0,0%`.
+
+El 08/09/2026, el usuario validó manualmente la etapa mediante una prueba controlada. Desde una jornada cerrada creó una nueva jornada para el 08/09/2026 en Manga Oro Monte sin borrar IndexedDB. La nueva jornada apareció abierta, con contador cero y formulario de carga, y recibió exclusivamente tres animales diagnosticados como Vacía.
+
+Al cerrar la segunda jornada, el resumen mostró total 3, preñadas 0 —0,0%—, vacías 3 —100,0%— y las cuatro categorías de preñez en 0 —0,0%—, sin `NaN`, infinito ni división por cero. El boqueo mostró Sin Diente 0 —0,0%— y Diente Cuarto 1 —33,3%—. También se comprobó el modo de solo lectura, la ausencia de acciones de edición y eliminación, el regreso al resumen y la disponibilidad de **Nueva jornada**.
+
+Esta evidencia no constituye una prueba en condiciones reales de campo. La jornada anterior y sus animales permanecen almacenados y asociados a su `journeyId`; la falta de una pantalla para navegar hacia ellos no representa pérdida de información.
+
+La próxima funcionalidad prevista es **Historial de jornadas**, para consultar jornadas anteriores, resúmenes y animales desde la interfaz. Esta etapa no incorpora historial, navegación histórica, reapertura, XLSX, respaldo, agente ni nuevas estadísticas.
+
 ## Decisiones que continúan pendientes
 
 - contrato mínimo, herramientas y límites del agente;

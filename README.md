@@ -64,7 +64,7 @@ El repositorio público es [pireseber-lang/TF-Agente-Diagnostico-Prenez](https:/
 
 ## Estado actual
 
-**Los incrementos de carga, persistencia, consulta, navegación, control de posibles duplicados, caravana con número opcional, cierre y resumen estadístico están implementados y validados manualmente en pruebas controladas.**
+**Los incrementos de carga, persistencia, consulta, navegación, control de posibles duplicados, caravana con número opcional, cierre, resumen estadístico y creación de una nueva jornada independiente están implementados y validados manualmente en pruebas controladas.**
 
 ### Implementado
 
@@ -97,15 +97,16 @@ El repositorio público es [pireseber-lang/TF-Agente-Diagnostico-Prenez](https:/
 - cierre explícito de una jornada no vacía mediante una revisión previa y confirmación humana;
 - persistencia del estado cerrado y de la fecha/hora de cierre en IndexedDB;
 - bloqueo de nuevas altas y consulta de animales en modo de solo lectura después del cierre;
+- creación de una jornada abierta e independiente después de cerrar la anterior, sin borrar ni modificar datos previos;
+- recuperación prioritaria de la jornada abierta y aislamiento de animales mediante `journeyId`;
 - resumen reproductivo y de boqueo calculado localmente desde los animales, sin guardar estadísticas duplicadas;
 - porcentajes con un decimal y denominadores diferenciados para el resultado general y la distribución interna de preñadas;
 - pruebas unitarias y de integración de las reglas y los repositorios incorporados.
 
 ### Pendiente de implementación o validación
 
-- prueba manual específica del resumen con cero vacas preñadas;
-- inicio de una nueva jornada después de cerrar la anterior y reapertura de jornadas cerradas;
-- historial general de jornadas cerradas;
+- reapertura de jornadas cerradas;
+- historial general de jornadas cerradas, próxima funcionalidad prevista;
 - exportación XLSX y respaldo JSON;
 - chequeo de preparación offline;
 - componente agéntico;
@@ -188,7 +189,25 @@ El 08/09/2026, el usuario validó manualmente esta funcionalidad en una prueba c
 
 También comprobó el cambio al estado cerrado, la presentación **Jornada finalizada**, la consulta de animales en modo de solo lectura sin acciones de edición o eliminación, el regreso al resumen y la conservación de los animales después del cierre.
 
-Esta fue una prueba controlada y no una validación en condiciones reales de campo o durante un trabajo real de manga. Sigue pendiente una prueba manual específica con cero vacas preñadas, aunque ese caso está cubierto por pruebas automáticas. Tampoco están implementados la reapertura, el inicio de una nueva jornada después del cierre, el historial general ni la exportación XLSX.
+Esta fue una prueba controlada y no una validación en condiciones reales de campo o durante un trabajo real de manga. El caso con cero vacas preñadas fue validado posteriormente al probar la creación y el cierre de una segunda jornada. Todavía no están implementados la reapertura, el historial general ni la exportación XLSX.
+
+### Nueva jornada después del cierre validada manualmente
+
+La pantalla de una jornada cerrada permite elegir entre **Ver animales cargados** y **Nueva jornada**. La primera acción conserva la consulta de la jornada finalizada en modo de solo lectura. La segunda abre el formulario de fecha y lugar y requiere confirmar **Iniciar jornada**.
+
+La nueva jornada se crea con un ID propio, estado abierto, sin fecha de cierre, sin animales y sin estadísticas almacenadas. La jornada cerrada anterior no se borra, sobrescribe, reabre ni modifica. Sus animales y evidencias de revisión permanecen asociados al `journeyId` original.
+
+Al iniciar o recuperar la aplicación se prioriza la jornada abierta; si no existe una, se muestra la jornada cerrada más reciente. La aplicación carga en memoria únicamente los animales del `journeyId` seleccionado. Por eso la búsqueda, el control de duplicados y las estadísticas operan sobre una sola jornada y una identificación de una jornada anterior no genera una advertencia en la nueva.
+
+El 08/09/2026, el usuario validó manualmente esta funcionalidad mediante una prueba controlada. Partió de una jornada cerrada y creó otra con fecha 08/09/2026 en Manga Oro Monte, sin borrar IndexedDB ni limpiar el almacenamiento. La nueva jornada apareció abierta, con contador cero y el formulario normal de carga; la anterior no fue reutilizada ni modificada.
+
+En la segunda jornada cargó tres animales, todos diagnosticados como Vacía. El contador y el listado mostraron únicamente esos tres registros. Al cerrar, el resumen presentó total 3, preñadas 0 —0,0%—, vacías 3 —100,0%— y Cabeza, Cuerpo, Cola y Robo en 0 —0,0%—. No aparecieron `NaN`, infinito ni errores de división por cero. Para boqueo mostró Sin Diente 0 —0,0%— y Diente Cuarto 1 —33,3%—.
+
+También se verificó que la segunda jornada quedara cerrada, que sus tres animales pudieran consultarse en modo de solo lectura, que no hubiera acciones de edición o eliminación, que fuera posible regresar al resumen y que **Nueva jornada** continuara disponible.
+
+La prueba no se realizó en condiciones reales de campo. La jornada anterior continúa almacenada en IndexedDB, con sus animales asociados al `journeyId` original; crear otra jornada no implica pérdida de información. La interfaz muestra la jornada abierta o, si no existe, la más reciente, pero todavía no permite navegar hacia jornadas históricas anteriores.
+
+La próxima funcionalidad prevista es **Historial de jornadas**, cuyo objetivo será consultar desde la interfaz las jornadas anteriores, sus resúmenes y sus animales. No se implementó en esta etapa. Tampoco se incorporaron reapertura, XLSX, respaldo ni componente agéntico.
 
 ## Ejecutar localmente
 
