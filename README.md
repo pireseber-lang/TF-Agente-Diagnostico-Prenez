@@ -55,12 +55,170 @@ Quedan fuera de V1:
 
 - [Especificación funcional V1](docs/especificacion_funcional_v1.md)
 - [Registro de decisiones](DECISIONES.md)
-- `prompts/`: borradores iniciales, todavía no calibrados, de los prompts del agente.
-- `corridas/`: carpeta reservada para corridas reales futuras; actualmente solo contiene una nota de alcance y no registra ninguna corrida.
+- `prompts/`: prompts mínimos versionados del agente académico.
+- `corridas/`: entradas, salidas y metadatos de las corridas reales del agente.
 
 ## Trazabilidad académica
 
 El repositorio público es [pireseber-lang/TF-Agente-Diagnostico-Prenez](https://github.com/pireseber-lang/TF-Agente-Diagnostico-Prenez). Las decisiones, iteraciones del agente y evidencias reales se documentarán en GitHub como parte del trabajo académico. No se presentarán corridas ficticias como evidencia.
+
+### Agente académico — Corrida 1
+
+La primera corrida estableció una línea de base deliberadamente mínima. El agente revisó una jornada finalizada, resumió resultados, generó alertas y señaló animales para revisión humana. Su herramienta real fue la lectura de un archivo JSON estructurado; no modificó IndexedDB ni ningún registro de la aplicación.
+
+La corrida utilizó `gpt-5.6-luna` con esfuerzo de razonamiento `low` sobre 10 registros reales extraídos de IndexedDB. La entrada está en `corridas/corrida_1/entrada.json`, la respuesta exacta en `corridas/corrida_1/salida.json` y los parámetros, tokens, prompts y datos de reproducción en `corridas/corrida_1/metadata.md`.
+
+El modelo produjo JSON válido y calculó correctamente 8 preñadas y 2 vacías. La evaluación detectó como falla principal que afirmó una coincidencia oficial entre `AI892-B258` y `AI892-B251`, aunque sus identificaciones individuales actuales son diferentes. Para Corrida 2 se aplicó una única modificación: indicar que un duplicado oficial requiere igualdad simultánea del prefijo y del identificador individual actuales, y que `duplicateReviews` no prueba por sí solo una coincidencia vigente.
+
+El agente analiza y una persona revisa. Ninguna salida modifica registros ni constituye una decisión automática de descarte. La decisión final permanece bajo supervisión humana. Pendiente de asignar nivel L0–L4 según definición exacta del curso.
+
+### Agente académico — Corrida 2
+
+Corrida 2 utilizó la misma entrada de 10 animales, el mismo modelo `gpt-5.6-luna`, razonamiento `low` y los mismos parámetros disponibles. El único cambio fue agregar al system prompt que un duplicado oficial requiere coincidencia simultánea del prefijo y del identificador individual actuales, y que `duplicateReviews` no demuestra por sí solo una coincidencia vigente.
+
+La salida dejó de afirmar que `AI892-B258` y `AI892-B251` fueran duplicados, por lo que la falla objetivo quedó corregida. Como única falla seleccionada para Corrida 3, el modelo afirmó que había **4 animales sin identificación oficial**, aunque los datos contienen cinco y la propia salida enumera esos cinco. La salida exacta y los datos de reproducción están en `corridas/corrida_2/`.
+
+### Agente académico — Corrida 3
+
+Corrida 3 utilizó nuevamente los mismos 10 registros, el mismo modelo `gpt-5.6-luna`, razonamiento `low`, el mismo user prompt y el mismo esquema. Las tres entradas son idénticas byte a byte y comparten el SHA-256 `FD9B972D5B3E2D99E4A3B22A4EC6DF48DE10B6E91C09B810F45E9A216BFF1DEE`. El único cambio respecto de Corrida 2 fue una regla que exige comprobar la consistencia de los conteos contra la entrada y el detalle generado.
+
+La falla objetivo quedó corregida: la alerta informa **5 animales sin identificación oficial** y `animales_a_revisar` contiene exactamente `Celeste-1523`, `Celeste-45`, `Celeste-545`, `Celeste-753` y `Celeste-900` para ese criterio. La salida exacta, sin correcciones manuales, y los parámetros de reproducción están en `corridas/corrida_3/`.
+
+La corrida dejó una limitación residual que se conserva como evidencia: afirmó que había **6 animales con condición corporal menor o igual a 2,25**, aunque la entrada contiene 7 (`AI892-B356`, `AI892-B132`, `AI892-B251`, `AI892-A123`, `Celeste-45`, `Celeste-545` y `Celeste-900`). No se corrigió la salida ni se ejecutará una Corrida 4. El caso demuestra por qué la revisión humana sigue siendo obligatoria.
+
+Las tres corridas fueron ejecuciones reales, controladas y de una sola inferencia por iteración. Cada salida permanece bajo supervisión humana y no modifica IndexedDB ni decide descartes. La comparación completa y sus límites están documentados en `DECISIONES.md`.
+
+## Componente agéntico y criterio de diseño
+
+El diagnóstico proviene del veterinario que trabaja en la manga; el agente no lo infiere. Su función se limita a revisar una jornada finalizada: lee el JSON estructurado, resume resultados, genera alertas, identifica casos para revisión y redacta una conclusión de apoyo.
+
+Se eligió la lectura de archivos JSON como herramienta real porque resuelve la tarea experimental con una interfaz pequeña y auditable. Mantiene al modelo separado de IndexedDB y del circuito offline, evita permisos de escritura innecesarios y permite preservar entrada, salida y hash sin incorporar servicios o automatizaciones que ampliarían el riesgo y el alcance.
+
+`gpt-5.6-luna` se utilizó por ser compatible con el entorno Codex/ChatGPT empleado y suficiente para esta revisión estructurada y acotada. No se afirma que sea el modelo más barato, porque no se incorporó evidencia oficial de precios al experimento.
+
+## Estructura relevante del repositorio
+
+- `src/`: aplicación React/TypeScript, reglas determinísticas e infraestructura IndexedDB.
+- `tests/`: pruebas unitarias y de integración de la aplicación.
+- `prompts/system_prompt.md`: versión final del system prompt, correspondiente a Corrida 3.
+- `prompts/user_prompt.md`: solicitud y esquema de salida, sin cambios entre corridas.
+- `corridas/corrida_1/`, `corrida_2/` y `corrida_3/`: entrada, salida exacta y metadatos de cada ejecución.
+- `DECISIONES.md`: decisiones de producto, arquitectura, iteración y cierre académico.
+- `docs/especificacion_funcional_v1.md`: especificación funcional y límites de V1.
+
+## Reproducibilidad de las corridas
+
+Para reconstruir una corrida:
+
+1. usar el archivo `entrada.json` de la corrida seleccionada;
+2. recuperar de su `metadata.md` el system prompt exacto utilizado;
+3. usar `prompts/user_prompt.md`, que se mantuvo sin cambios;
+4. seleccionar `gpt-5.6-luna` con razonamiento `low`;
+5. permitir que el agente lea el JSON mediante la herramienta de lectura de archivos, en modo de solo lectura;
+6. conservar literalmente la respuesta obtenida, incluso si contiene errores;
+7. validar si es JSON y compararla con `salida.json`;
+8. contrastar entrada y parámetros con los hashes, fechas y tokens registrados en `metadata.md`.
+
+Las tres entradas son idénticas byte a byte y tienen SHA-256 `FD9B972D5B3E2D99E4A3B22A4EC6DF48DE10B6E91C09B810F45E9A216BFF1DEE`. El repositorio no conserva tres archivos independientes del system prompt: `prompts/system_prompt.md` contiene la versión final de Corrida 3. Las versiones exactas utilizadas en Corridas 1 y 2 están reproducidas dentro de `corridas/corrida_1/metadata.md` y `corridas/corrida_2/metadata.md`. Cada metadata también conserva el mensaje exacto del ejecutor, porque el user prompt contiene una referencia histórica a `corrida_1/entrada.json` que el ejecutor reemplazó explícitamente por la entrada correspondiente en cada corrida.
+
+Una nueva ejecución puede variar aunque conserve entrada, prompt, modelo y parámetros. La reproducción permite reconstruir las condiciones y comparar resultados; no promete una respuesta textual idéntica.
+
+## Análisis económico
+
+`codex exec` informó consumo de tokens, pero no informó costo monetario. Por eso no se asignan precios, no se estima una factura y no se presentan valores monetarios ficticios.
+
+| Corrida | Entrada total | Entrada en caché | Entrada no cacheada | Salida | Razonamiento incluido en salida |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 1 | 30.694 | 23.040 | 7.654 | 817 | 205 |
+| 2 | 30.793 | 23.040 | 7.753 | 911 | 243 |
+| 3 | 30.904 | 23.040 | 7.864 | 952 | 349 |
+| **Promedio aproximado** | **30.797** | **23.040** | **7.757** | **893** | **266** |
+
+En conjunto, aproximadamente el 74,8 % de los tokens de entrada fueron recuperados desde caché. Esto debe distinguirse del consumo no cacheado al aplicar una tarifa, pero no permite calcular dinero sin los precios oficiales aplicables al modelo y al canal de ejecución.
+
+Cuando esos precios estén disponibles, la fórmula general por corrida será:
+
+```text
+costo por corrida =
+  (tokens de entrada no cacheados / 1.000.000 × precio input)
+  + (tokens de entrada cacheados / 1.000.000 × precio cached input)
+  + (tokens de salida / 1.000.000 × precio output)
+```
+
+Para una estimación operativa con una corrida por jornada:
+
+```text
+costo semanal = costo por corrida × cantidad de jornadas semanales
+costo anual = costo semanal × 52
+```
+
+Si una jornada requiriera varias corridas, primero se sumaría su costo y luego se aplicaría la cantidad de jornadas. Los tokens de razonamiento ya están incluidos en la salida informada y no deben sumarse otra vez salvo que la tarifa oficial indique un tratamiento diferente.
+
+## Gobernanza, riesgos y autoridad
+
+### Lo que el agente puede hacer
+
+- leer una jornada estructurada;
+- resumir resultados;
+- generar alertas;
+- señalar animales para revisión;
+- producir una conclusión de apoyo.
+
+### Lo que el agente no puede hacer
+
+- diagnosticar preñez;
+- modificar registros o cambiar diagnósticos;
+- eliminar animales;
+- decidir descartes;
+- enviar órdenes operativas;
+- ejecutar acciones sobre el rodeo.
+
+### Riesgos observados empíricamente
+
+- interpretar datos históricos como `duplicateReviews` como si demostraran una coincidencia vigente;
+- producir inconsistencias cuantitativas, observadas en los conteos 4 vs 5 y 6 vs 7;
+- generar alertas a partir de criterios que el prompt no definió suficientemente;
+- presentar una inferencia con redacción que puede parecer una afirmación comprobada.
+
+### Controles
+
+- entrada y salida estructuradas;
+- herramienta de lectura con permisos de solo lectura;
+- conservación literal de entradas y salidas;
+- tres corridas reales reconstruibles, sin corrección manual;
+- un solo cambio de prompt entre iteraciones;
+- trazabilidad mediante fechas, modelo, parámetros, tokens y SHA-256;
+- separación respecto de IndexedDB y ausencia de acciones automáticas;
+- supervisión humana obligatoria.
+
+La salida es una ayuda, no una firma profesional. La decisión productiva final corresponde al responsable humano del rodeo y, cuando corresponda, al profesional veterinario o agronómico responsable. El agente no recibe autoridad profesional.
+
+## Nivel de supervisión L0–L4
+
+El repositorio no contiene la definición formal de L0, L1, L2, L3 y L4 utilizada por la materia. La especificación solo conserva una referencia preliminar y advierte que debe contrastarse con la rúbrica oficial. Por lo tanto, no se asigna un nivel ni se convierte esa referencia en una conclusión.
+
+**Pendiente de asignar nivel L0–L4 según definición exacta del curso.**
+
+## Checklist académico
+
+| Requisito | Estado y evidencia |
+| --- | --- |
+| Sistema completo | **Parcial respecto del alcance V1 declarado.** El núcleo de carga, persistencia, consulta, duplicados, cierre, resumen e historial está implementado; siguen pendientes XLSX, respaldo JSON, validación offline física e integración del agente en la aplicación. |
+| System prompt | **Cumplido.** Versión final en `prompts/system_prompt.md`; versiones anteriores exactas en los metadatos. |
+| User prompt | **Cumplido.** `prompts/user_prompt.md`, sin cambios entre corridas. |
+| Herramienta real | **Cumplido.** Lectura del archivo JSON estructurado documentada en cada metadata. |
+| Salida estructurada | **Cumplido.** Las tres respuestas preservadas son JSON válido con el esquema solicitado. |
+| Supervisión | **Cumplido.** Revisión humana obligatoria y ausencia de autoridad automática. |
+| Tres corridas reales | **Cumplido.** Entrada, salida y metadata en `corridas/corrida_1/` a `corrida_3/`. |
+| Entrada, salida y fecha reconstruibles | **Cumplido.** Archivos, timestamps, prompts, parámetros y hashes registrados. |
+| README, `prompts/`, `corridas/` y `DECISIONES.md` | **Cumplido.** Estructura presente y documentada. |
+| Iteraciones y fallas textuales | **Cumplido.** Secuencia Corrida 1 → Cambio 1 → Corrida 2 → Cambio 2 → Corrida 3 y limitación residual. |
+| Cambios de alcance | **Cumplido.** Alcance V1, exclusiones, incrementos y pendientes registrados. |
+| Tokens y análisis económico | **Cumplido.** Consumo real, promedios, caché y fórmulas sin inventar precios. |
+| Modelo elegido | **Cumplido.** `gpt-5.6-luna`, razonamiento `low`, con justificación acotada. |
+| Gobernanza, riesgos y permisos | **Cumplido.** Capacidades, prohibiciones, riesgos, controles y solo lectura documentados. |
+| Responsable humano final | **Cumplido.** Responsable del rodeo y profesional veterinario/agronómico cuando corresponda. |
+| Nivel L0–L4 | **Pendiente.** Falta la definición formal de la materia; no se asigna un nivel. |
 
 ## Estado actual
 
@@ -113,7 +271,7 @@ El repositorio público es [pireseber-lang/TF-Agente-Diagnostico-Prenez](https:/
 - eliminación de jornadas;
 - exportación XLSX y respaldo JSON;
 - chequeo de preparación offline;
-- componente agéntico;
+- integración del componente agéntico con la aplicación; la línea de base académica Corrida 1 ya está documentada;
 - validación física en Android/Chrome y reapertura en modo avión.
 
 ### Validaciones manuales
@@ -211,7 +369,7 @@ También se verificó que la segunda jornada quedara cerrada, que sus tres anima
 
 La prueba no se realizó en condiciones reales de campo. La jornada anterior continúa almacenada en IndexedDB, con sus animales asociados al `journeyId` original; crear otra jornada no implica pérdida de información. La interfaz muestra la jornada abierta o, si no existe, la más reciente, pero todavía no permite navegar hacia jornadas históricas anteriores.
 
-La siguiente etapa implementó **Historial de jornadas** para consultar desde la interfaz las jornadas anteriores, sus resúmenes y sus animales. Continúan pendientes la reapertura, eliminación de jornadas, XLSX, respaldo y componente agéntico.
+La siguiente etapa implementó **Historial de jornadas** para consultar desde la interfaz las jornadas anteriores, sus resúmenes y sus animales. En ese momento continuaban pendientes la reapertura, eliminación de jornadas, XLSX, respaldo y componente agéntico.
 
 ### Historial de jornadas validado manualmente
 
@@ -231,7 +389,7 @@ El listado mostró exclusivamente AI892 PU50 con Naranja 1234, AI892 PU51 con Na
 
 Mediante el historial se comprobó además que Manga Casco conserva sus 10 animales, Manga Oro Monte conserva sus 3 animales y que no se mezclan ni modifican datos entre jornadas. Cada animal continúa asociado a su `journeyId`; los resúmenes se calculan desde esos registros y las estadísticas no se duplican en IndexedDB. Consultar una jornada no reemplaza la jornada actual.
 
-Esta evidencia corresponde a una prueba controlada, no a condiciones reales de campo. Todavía no se implementaron reapertura, edición histórica, eliminación de jornadas, XLSX, respaldo ni componente agéntico.
+Esta evidencia corresponde a una prueba controlada, no a condiciones reales de campo. Todavía no se implementaron reapertura, edición histórica, eliminación de jornadas, XLSX, respaldo ni integración del componente agéntico con la aplicación. La Corrida 1 académica posterior permanece desacoplada del flujo operativo.
 
 ## Ejecutar localmente
 

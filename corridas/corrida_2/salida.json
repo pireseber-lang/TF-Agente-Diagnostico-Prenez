@@ -1,0 +1,60 @@
+{
+  "jornada": {
+    "fecha": "2026-09-07",
+    "lugar": "Manga Casco",
+    "total_animales": 10
+  },
+  "resumen": {
+    "prenadas": 8,
+    "vacias": 2
+  },
+  "alertas": [
+    {
+      "tipo": "identificacion_incompleta",
+      "descripcion": "Se registraron 4 animales sin identificación oficial."
+    },
+    {
+      "tipo": "caravana_invalida",
+      "descripcion": "El animal con caravana verde número 0 presenta un número inválido o faltante."
+    },
+    {
+      "tipo": "animal_vacio_viejo",
+      "descripcion": "El animal AI892-B356 fue diagnosticado vacío y observado como vieja vacía."
+    },
+    {
+      "tipo": "condicion_corporal_baja",
+      "descripcion": "Se registraron animales con condición corporal igual o inferior a 2,25."
+    }
+  ],
+  "animales_a_revisar": [
+    {
+      "identificacion": "Celeste-1523",
+      "motivo": "No posee identificación oficial."
+    },
+    {
+      "identificacion": "AI892-B356",
+      "motivo": "Diagnóstico vacío y observación de vieja vacía."
+    },
+    {
+      "identificacion": "AI892-B132",
+      "motivo": "Número de caravana 0 y condición corporal 2,25."
+    },
+    {
+      "identificacion": "Celeste-45",
+      "motivo": "No posee identificación oficial."
+    },
+    {
+      "identificacion": "Celeste-545",
+      "motivo": "No posee identificación oficial."
+    },
+    {
+      "identificacion": "Celeste-753",
+      "motivo": "No posee identificación oficial y presenta condición corporal 2."
+    },
+    {
+      "identificacion": "Celeste-900",
+      "motivo": "No posee identificación oficial."
+    }
+  ],
+  "conclusion": "La jornada registró 10 animales: 8 preñados y 2 vacíos. Se recomienda revisión humana de los animales con identificación oficial ausente o inconsistente, del animal con caravana número 0, del animal viejo diagnosticado vacío y de los casos con condición corporal baja."
+}

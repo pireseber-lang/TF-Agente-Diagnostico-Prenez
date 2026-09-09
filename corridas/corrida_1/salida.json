@@ -1,0 +1,52 @@
+{
+  "jornada": {
+    "fecha": "2026-09-07",
+    "lugar": "Manga Casco",
+    "total_animales": 10
+  },
+  "resumen": {
+    "prenadas": 8,
+    "vacias": 2
+  },
+  "alertas": [
+    {
+      "tipo": "duplicado",
+      "descripcion": "Se detectó una coincidencia por identificación oficial entre AI892-B258 y AI892-B251; ambas fueron conservadas y requieren revisión humana."
+    },
+    {
+      "tipo": "identificacion_incompleta",
+      "descripcion": "Hay animales identificados únicamente por caravana de color y número, sin identificación oficial."
+    },
+    {
+      "tipo": "identificacion_invalida",
+      "descripcion": "El animal AI892-B132 registra número de caravana 0."
+    }
+  ],
+  "animales_a_revisar": [
+    {
+      "identificacion": "AI892-B258",
+      "motivo": "Coincidencia de identificación oficial con AI892-B251."
+    },
+    {
+      "identificacion": "AI892-B251",
+      "motivo": "Coincidencia de identificación oficial con AI892-B258."
+    },
+    {
+      "identificacion": "AI892-B132",
+      "motivo": "Número de caravana 0 y observación 'POCO DIENTE'."
+    },
+    {
+      "identificacion": "AI892-B356",
+      "motivo": "Animal vacío con observación 'VIEJA VACIA'."
+    },
+    {
+      "identificacion": "Celeste-1523",
+      "motivo": "No registra identificación oficial."
+    },
+    {
+      "identificacion": "Celeste-45",
+      "motivo": "No registra identificación oficial."
+    }
+  ],
+  "conclusion": "La jornada registró 10 animales, con 8 preñadas y 2 vacías. Se recomienda revisión humana de las inconsistencias de identificación y de los casos señalados antes de tomar decisiones definitivas."
+}

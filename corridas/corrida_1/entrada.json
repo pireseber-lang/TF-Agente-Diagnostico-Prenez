@@ -1,0 +1,168 @@
+{
+  "jornada": {
+    "id": "6a5704b0-52c2-4562-9799-e9accedf9af6",
+    "date": "2026-09-07",
+    "place": "Manga Casco",
+    "status": "closed",
+    "createdAt": "2026-09-07T04:15:53.567Z",
+    "closedAt": "2026-09-08T11:23:17.168Z"
+  },
+  "animales": [
+    {
+      "id": "6f2d6202-cbe1-4cc7-9e54-c4c9d13be609",
+      "journeyId": "6a5704b0-52c2-4562-9799-e9accedf9af6",
+      "sequence": 1,
+      "officialPrefix": "AI892",
+      "officialIndividual": "B258",
+      "tagColor": "Violeta",
+      "tagNumber": "834",
+      "diagnosis": "Preñada Cabeza",
+      "dentition": "Diente cuarto",
+      "bodyCondition": 3,
+      "observations": "Con cuernos",
+      "createdAt": "2026-09-07T04:19:27.399Z",
+      "updatedAt": "2026-09-08T11:18:25.335Z",
+      "duplicateReviews": [
+        {
+          "decision": "keep-both",
+          "reviewedAt": "2026-09-08T11:18:25.331Z",
+          "matches": [
+            {
+              "animalId": "c413b580-59e6-446e-9e38-a0d925c17b21",
+              "reasons": [
+                "official"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1e7aff19-7c43-4bb5-bec8-7a06ccdc3016",
+      "journeyId": "6a5704b0-52c2-4562-9799-e9accedf9af6",
+      "sequence": 3,
+      "tagColor": "Celeste",
+      "tagNumber": "1523",
+      "diagnosis": "Preñada Cuerpo",
+      "dentition": "Diente lleno",
+      "bodyCondition": 3.25,
+      "observations": "",
+      "createdAt": "2026-09-07T22:20:06.561Z"
+    },
+    {
+      "id": "ea157797-da8a-41a7-885b-844b51abd69c",
+      "journeyId": "6a5704b0-52c2-4562-9799-e9accedf9af6",
+      "sequence": 4,
+      "officialPrefix": "AI892",
+      "officialIndividual": "B356",
+      "diagnosis": "Vacía",
+      "dentition": "Diente cuarto",
+      "bodyCondition": 2.25,
+      "observations": "VIEJA VACIA",
+      "createdAt": "2026-09-07T22:22:47.647Z",
+      "updatedAt": "2026-09-07T22:23:10.785Z"
+    },
+    {
+      "id": "5730b43d-da10-4c62-a512-1cf4cc279236",
+      "journeyId": "6a5704b0-52c2-4562-9799-e9accedf9af6",
+      "sequence": 5,
+      "officialPrefix": "AI892",
+      "officialIndividual": "B132",
+      "tagColor": "Verde",
+      "tagNumber": "0",
+      "diagnosis": "Preñada Cuerpo",
+      "dentition": "Diente cuarto",
+      "bodyCondition": 2.25,
+      "observations": "POCO DIENTE",
+      "createdAt": "2026-09-07T22:52:19.080Z"
+    },
+    {
+      "id": "c413b580-59e6-446e-9e38-a0d925c17b21",
+      "journeyId": "6a5704b0-52c2-4562-9799-e9accedf9af6",
+      "sequence": 6,
+      "officialPrefix": "AI892",
+      "officialIndividual": "B251",
+      "diagnosis": "Preñada Cabeza",
+      "dentition": "Sin Diente",
+      "bodyCondition": 2,
+      "observations": "",
+      "createdAt": "2026-09-08T01:10:47.637Z",
+      "duplicateReviews": [
+        {
+          "decision": "keep-both",
+          "reviewedAt": "2026-09-08T01:10:47.623Z",
+          "matches": [
+            {
+              "animalId": "6f2d6202-cbe1-4cc7-9e54-c4c9d13be609",
+              "reasons": [
+                "official"
+              ]
+            }
+          ]
+        }
+      ],
+      "updatedAt": "2026-09-08T11:19:07.235Z"
+    },
+    {
+      "id": "71bd21ab-cc65-4e56-99ba-ddb94866c186",
+      "journeyId": "6a5704b0-52c2-4562-9799-e9accedf9af6",
+      "sequence": 7,
+      "officialPrefix": "AI892",
+      "officialIndividual": "A123",
+      "diagnosis": "Preñada Cabeza",
+      "dentition": "Diente lleno",
+      "bodyCondition": 2,
+      "observations": "",
+      "createdAt": "2026-09-08T01:12:09.736Z"
+    },
+    {
+      "id": "1c7b372b-c74f-4ee9-934a-6530972d7185",
+      "journeyId": "6a5704b0-52c2-4562-9799-e9accedf9af6",
+      "sequence": 9,
+      "tagColor": "Celeste",
+      "tagNumber": "45",
+      "diagnosis": "Vacía",
+      "dentition": "Diente lleno",
+      "bodyCondition": 2.25,
+      "observations": "",
+      "createdAt": "2026-09-08T01:25:20.505Z"
+    },
+    {
+      "id": "41c79818-4016-4924-ad93-203a0b8845f5",
+      "journeyId": "6a5704b0-52c2-4562-9799-e9accedf9af6",
+      "sequence": 10,
+      "tagColor": "Celeste",
+      "tagNumber": "545",
+      "diagnosis": "Preñada Cola",
+      "dentition": "Diente lleno",
+      "bodyCondition": 2.25,
+      "observations": "",
+      "createdAt": "2026-09-08T01:25:52.718Z"
+    },
+    {
+      "id": "cb85bf98-d2b0-4a6c-af83-8209049afcf6",
+      "journeyId": "6a5704b0-52c2-4562-9799-e9accedf9af6",
+      "sequence": 11,
+      "tagColor": "Celeste",
+      "tagNumber": "753",
+      "diagnosis": "Preñada Cabeza",
+      "dentition": "Sin Diente",
+      "bodyCondition": 3.25,
+      "observations": "",
+      "createdAt": "2026-09-08T01:26:14.752Z",
+      "updatedAt": "2026-09-08T11:19:19.302Z"
+    },
+    {
+      "id": "9ec62cd9-77f6-41d3-9c76-3a580b165a2b",
+      "journeyId": "6a5704b0-52c2-4562-9799-e9accedf9af6",
+      "sequence": 12,
+      "tagColor": "Celeste",
+      "tagNumber": "900",
+      "diagnosis": "Preñada Robo",
+      "dentition": "Diente lleno",
+      "bodyCondition": 2.25,
+      "observations": "",
+      "createdAt": "2026-09-08T01:26:39.109Z"
+    }
+  ]
+}

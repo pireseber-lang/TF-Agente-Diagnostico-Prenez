@@ -125,16 +125,16 @@ El componente agéntico deberá tener un rol real y demostrable de análisis y s
 - La arquitectura deberá definir una frontera explícita entre reglas locales, agente y cualquier servicio opcional futuro.
 - La existencia y calidad del comportamiento agéntico deberán demostrarse con corridas reales, no presumirse desde la especificación.
 
-## DEC-008 — Supervisión humana y posicionamiento preliminar L0–L4
+## DEC-008 — Supervisión humana y clasificación L0–L4 pendiente
 
 - **Fecha:** 2026-09-06
-- **Estado:** Aceptada para V1; clasificación L0–L4 provisional
+- **Estado:** Aceptada para V1; clasificación L0–L4 pendiente
 
 ### Decisión
 
 El veterinario determina el diagnóstico; el usuario registra la información, revisa alertas y confirma el cierre; el sistema ejecuta validaciones; el agente puede analizar y señalar problemas; ningún diagnóstico puede cambiarse automáticamente; el resultado final queda bajo responsabilidad humana.
 
-Hasta incorporar la rúbrica formal de la materia, el sistema solo se relaciona preliminarmente con L0–L4: la planilla manual es la referencia L0, las reglas determinísticas no prueban agencia por sí solas y el futuro componente agéntico aspira a una asistencia acotada L1–L2. No se atribuyen capacidades L3–L4.
+Pendiente de asignar nivel L0–L4 según definición exacta del curso.
 
 ### Consecuencias
 
@@ -628,8 +628,145 @@ La prueba confirmó búsqueda disponible, modo de solo lectura sin editar, elimi
 
 Esta evidencia corresponde a una prueba controlada y no a condiciones reales de campo. Continúan fuera de esta etapa la reapertura, edición histórica, eliminación de jornadas, XLSX, respaldo, agente y nuevas estadísticas.
 
+## DEC-022 — Agente académico: Corrida 1 mínima
+
+- **Fecha:** 2026-09-09
+- **Estado:** Ejecutada y evaluada
+
+### Objetivo y evidencia
+
+La Corrida 1 establece una línea de base deliberadamente mínima antes de agregar reglas de dominio. El agente recibió dos prompts breves y usó como herramienta real la lectura del archivo estructurado `corridas/corrida_1/entrada.json`, con 10 registros reales extraídos de IndexedDB. La entrada no fue incluida dentro del system prompt.
+
+La inferencia se ejecutó una sola vez con `gpt-5.6-luna`, esfuerzo de razonamiento `low` y herramientas en modo de solo lectura. La respuesta exacta se conserva en `corridas/corrida_1/salida.json`; `corridas/corrida_1/metadata.md` registra fecha, parámetros, prompts y tokens. La interfaz no informó un costo y no se estimó uno.
+
+### Evaluación de la salida
+
+El agente hizo correctamente lo siguiente:
+
+- devolvió JSON válido con la estructura solicitada y sin campos adicionales;
+- informó fecha, lugar y total correctos;
+- calculó correctamente 8 preñadas y 2 vacías;
+- mantuvo sus observaciones como alertas y pedidos de revisión humana, sin modificar registros ni decidir descartes.
+
+La interpretación fue ambigua en alertas como `identificacion_incompleta` e `identificacion_invalida`: el prompt mínimo no definía que la identificación oficial fuera obligatoria ni que el valor de caravana `0` fuera inválido. También omitió distinguir explícitamente la evidencia histórica contenida en `duplicateReviews` de las identificaciones actuales de los registros.
+
+### Única falla seleccionada
+
+La salida afirmó: **“Se detectó una coincidencia por identificación oficial entre AI892-B258 y AI892-B251”**. Esta afirmación es verificablemente incorrecta porque, aunque ambos registros comparten el prefijo `AI892`, sus identificadores individuales actuales son distintos: `B258` y `B251`.
+
+La hipótesis es que, al no existir una regla explícita de comparación, el modelo trató la referencia cruzada almacenada en `duplicateReviews` como prueba suficiente de un duplicado vigente y no la contrastó con ambos componentes actuales de la identificación oficial.
+
+### Única modificación propuesta para Corrida 2
+
+Agregar una sola regla al prompt: **considerar duplicado oficial únicamente cuando coincidan simultáneamente el prefijo y el identificador individual actuales; `duplicateReviews` es evidencia de una revisión humana previa y no demuestra por sí solo una coincidencia vigente**.
+
+En la etapa de Corrida 1 la modificación quedó solamente propuesta; su aplicación y resultado se documentan en las decisiones posteriores.
+
+### Supervisión humana
+
+El agente analiza y una persona revisa. Ninguna salida modifica registros ni constituye una decisión automática de descarte. La decisión final es humana.
+
+Pendiente de asignar nivel L0–L4 según definición exacta del curso.
+
+## DEC-023 — Agente académico: comparación controlada de Corrida 1 y Corrida 2
+
+- **Fecha:** 2026-09-09
+- **Estado:** Corrida 2 ejecutada y evaluada
+
+### Corrida 1: falla observada
+
+Corrida 1 afirmó: **“Se detectó una coincidencia por identificación oficial entre AI892-B258 y AI892-B251; ambas fueron conservadas y requieren revisión humana.”** La evidencia es incorrecta porque los identificadores individuales actuales son diferentes: `B258` y `B251`.
+
+### Cambio único
+
+Se agregó exclusivamente esta regla al system prompt:
+
+> Considerar duplicado por identificación oficial únicamente cuando coincidan simultáneamente el prefijo oficial y el identificador individual actuales de ambos animales. El campo `duplicateReviews` registra una revisión humana realizada previamente y no constituye por sí solo evidencia de que exista una coincidencia vigente. Ante una diferencia entre `duplicateReviews` y los campos actuales de identificación, prevalecen los campos actuales.
+
+No se modificó el user prompt ni se incorporaron otras reglas. Corrida 2 utilizó una copia byte a byte de la entrada de Corrida 1 y los mismos parámetros disponibles: `gpt-5.6-luna`, razonamiento `low`, herramientas en modo de solo lectura y sesión efímera.
+
+### Corrida 2: resultado de la comparación
+
+La salida de Corrida 2 no clasificó a `AI892-B258` y `AI892-B251` como duplicados ni afirmó que sus identificaciones oficiales coincidieran. La falla que motivó la iteración quedó corregida en esta ejecución.
+
+La salida conservó el formato JSON solicitado y volvió a informar correctamente 10 animales, 8 preñadas y 2 vacías. La respuesta exacta está en `corridas/corrida_2/salida.json` y sus parámetros y tokens en `corridas/corrida_2/metadata.md`.
+
+### Única falla seleccionada para una eventual Corrida 3
+
+Corrida 2 afirmó: **“Se registraron 4 animales sin identificación oficial.”** La entrada contiene cinco animales sin los campos de identificación oficial: `Celeste-1523`, `Celeste-45`, `Celeste-545`, `Celeste-753` y `Celeste-900`. La propia sección `animales_a_revisar` de la salida también enumera esos cinco casos, por lo que existe una contradicción cuantitativa verificable dentro de la respuesta.
+
+En la etapa de Corrida 2 esta falla quedó únicamente documentada. Su tratamiento controlado se registra en DEC-024.
+
+## DEC-024 — Agente académico: comparación controlada de Corrida 2 y Corrida 3
+
+- **Fecha:** 2026-09-09
+- **Estado:** Corrida 3 ejecutada y evaluada
+
+### Trazabilidad de las tres corridas
+
+- **Corrida 1:** agente mínimo. La salida afirmó falsamente que `AI892-B258` y `AI892-B251` coincidían por identificación oficial.
+- **Cambio 1:** se agregó una única regla que exige coincidencia simultánea del prefijo y del identificador individual actuales y aclara que `duplicateReviews` registra una revisión humana previa, no una coincidencia vigente por sí sola.
+- **Corrida 2:** el falso duplicado quedó corregido. La nueva falla seleccionada fue una contradicción: la alerta informó 4 animales sin identificación oficial, aunque la entrada y el detalle de la propia salida contenían 5.
+- **Cambio 2:** se agregó una única regla para verificar, antes de emitir la salida, que los conteos del resumen, las alertas y la conclusión coincidan con la entrada y con los casos individuales incluidos en la propia respuesta.
+- **Corrida 3:** la alerta informó 5 animales sin identificación oficial y el detalle incluyó exactamente los cinco casos reales. La inconsistencia objetivo 4 vs 5 quedó corregida.
+
+### Control experimental
+
+Las tres corridas utilizaron una entrada idéntica byte a byte, con SHA-256 `FD9B972D5B3E2D99E4A3B22A4EC6DF48DE10B6E91C09B810F45E9A216BFF1DEE`, el modelo `gpt-5.6-luna`, razonamiento `low`, herramientas en modo de solo lectura y sesión efímera. El user prompt y el esquema de salida no cambiaron. Entre Corrida 2 y Corrida 3 solo se agregó la regla de consistencia autorizada.
+
+La salida exacta de Corrida 3 se conserva sin edición en `corridas/corrida_3/salida.json`; los parámetros, tokens, prompts y evaluación están en `corridas/corrida_3/metadata.md`.
+
+### Resultado y límite de la evaluación
+
+Para la categoría objetivo, Corrida 3 mantuvo consistencia entre la entrada, el total informado y el detalle: `Celeste-1523`, `Celeste-45`, `Celeste-545`, `Celeste-753` y `Celeste-900` son los cinco animales sin identificación oficial.
+
+Como observación adicional de la salida real, la alerta de condición corporal informó 6 animales con condición corporal menor o igual a 2,25, mientras que la entrada contiene 7. Esta observación no fue corregida manualmente ni motivó cambios adicionales: no se ejecutó una Corrida 4.
+
+### Supervisión humana
+
+Las salidas del agente son evidencia académica sujeta a revisión humana. No modifican los registros de la aplicación ni constituyen decisiones automáticas de descarte.
+
+## DEC-025 — Cierre académico del componente agéntico
+
+- **Fecha:** 2026-09-09
+- **Estado:** Evidencia experimental aceptada y ciclo de tres corridas cerrado
+
+### Problema y separación de responsabilidades
+
+El problema original es operativo: la planilla Excel dificulta la carga ágil desde un celular durante el trabajo en la manga, especialmente sin conectividad, y posterga controles y resúmenes. La aplicación resuelve el registro local, las validaciones determinísticas, la consulta y el cierre de la jornada. El diagnóstico de preñez no es producido por el sistema ni por el agente: proviene del profesional humano que trabaja en la manga y se registra como dato de entrada.
+
+El agente se ubicó deliberadamente fuera del circuito crítico. Su rol es revisar posteriormente una jornada ya finalizada, resumir los registros, generar alertas, señalar animales para revisión y producir una conclusión de apoyo. No puede cambiar diagnósticos, modificar o eliminar registros, decidir descartes ni ejecutar acciones sobre el rodeo.
+
+### Herramienta y criterio de simplicidad
+
+La herramienta real elegida fue la lectura de un archivo JSON estructurado. Es una solución suficiente para una tarea acotada de revisión y permite mantener una frontera clara con IndexedDB y con la aplicación operativa. También facilita auditar exactamente la entrada, conservar la respuesta literal, calcular hashes y repetir el experimento sin agregar integraciones, permisos de escritura o infraestructura que no aportan al objetivo académico.
+
+Se utilizó `gpt-5.6-luna` con razonamiento `low` porque fue compatible con el entorno Codex/ChatGPT utilizado y resultó suficiente para ejecutar la revisión estructurada. Esta elección no supone ni afirma que sea el modelo de menor costo.
+
+### Secuencia experimental aceptada
+
+1. **Corrida 1 — línea de base mínima.** Sobre 10 animales reales, el agente afirmó falsamente una coincidencia oficial entre `AI892-B258` y `AI892-B251`.
+2. **Cambio 1.** Se agregó una única regla: un duplicado oficial exige coincidencia simultánea del prefijo y del identificador individual actuales; `duplicateReviews` registra una revisión humana previa y no constituye evidencia actual por sí solo.
+3. **Corrida 2.** El falso duplicado desapareció. La salida introdujo una contradicción cuantitativa: informó 4 animales sin identificación oficial, aunque la entrada y su propio detalle contenían 5.
+4. **Cambio 2.** Se agregó una única regla para comprobar la consistencia entre conteos, entrada y detalle antes de emitir la respuesta.
+5. **Corrida 3.** La categoría objetivo quedó corregida: informó 5 animales sin identificación oficial y detalló los cinco casos reales.
+
+Corrida 3 dejó una limitación residual: afirmó que 6 animales tenían condición corporal menor o igual a 2,25, mientras que los datos contienen 7: `AI892-B356` (2,25), `AI892-B132` (2,25), `AI892-B251` (2), `AI892-A123` (2), `Celeste-45` (2,25), `Celeste-545` (2,25) y `Celeste-900` (2,25).
+
+### Decisión de cierre y riesgo aceptado
+
+No se realizará una Corrida 4. El objetivo académico de conservar tres corridas reales y mostrar dos iteraciones controladas con un único cambio por vez ya está cubierto. La limitación 6 vs 7 se preserva como evidencia empírica de que una salida estructurada y una instrucción de consistencia reducen riesgos, pero no garantizan exactitud. Por eso toda salida requiere revisión humana y no recibe autoridad operativa o profesional.
+
+Las entradas, salidas y metadatos de las tres corridas quedan congelados como evidencia. Los prompts tampoco se vuelven a modificar en este cierre.
+
+### Clasificación L0–L4
+
+El repositorio no contiene la definición formal de L0, L1, L2, L3 y L4 utilizada por la materia; solo existe una referencia preliminar explícitamente sujeta a la rúbrica. En consecuencia, no se asigna un nivel.
+
+**Pendiente de asignar nivel L0–L4 según definición exacta del curso.**
+
 ## Decisiones que continúan pendientes
 
-- contrato mínimo, herramientas y límites del agente;
+- cualquier calibración adicional del agente queda fuera del cierre experimental actual; no se realizará una Corrida 4;
 - definición formal de L0–L4 según la materia;
 - longitudes máximas de los identificadores como decisión técnica menor de implementación.
